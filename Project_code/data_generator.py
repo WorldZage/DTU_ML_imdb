@@ -1,6 +1,8 @@
 # Functions for checking the size of our dataset
+dataset_path_n_parents = "../../../"
+
 def valid_ratings_set():
-    rating_path = "../datasets/title.ratings.tsv/data.tsv"
+    rating_path = dataset_path_n_parents + "datasets/title.ratings.tsv/data.tsv"
     min_counts = 1000
     valid_ratings = set()
     with open(rating_path, "r", encoding="utf-8") as rating_f:
@@ -26,7 +28,7 @@ def valid_ratings_set():
 
 def valid_movies_set():
     # number of valid movies:
-    basics_path = "../datasets/title.basics.tsv/data.tsv"
+    basics_path = dataset_path_n_parents+"datasets/title.basics.tsv/data.tsv"
     valid_movies = set()
     c = 0
     with open(basics_path, "r", encoding="utf-8") as basic_f:
