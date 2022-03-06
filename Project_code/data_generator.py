@@ -148,20 +148,24 @@ class DataSet:
         if invalid_attr_from_order:
             raise ValueError(f"Invalid attributes: {','.join(invalid_attr_from_order)}\nfound in attribute-order list")
 
+        col_delimiter = ","
+        row_delimiter = "\n"
         # Create the entire list of strings which will be written, & *then* we will write it to a file.
         # first, the attributes
-        payload = ["\t".join(attr_order)]
+        payload = [col_delimiter.join(attr_order)]
         # then, add a row for each of our dataobjects:
         for (tconst, dataobj) in self.data_map.items():
-            row_str = "\n"
+            row_str_list = []
             for att in attr_order:
                 if dataobj.value_map[att]:
                     # If the attribute in the given order actually exists
-                    row_str += f"{dataobj.value_map[att]}\t"
+                    row_str_list.append(dataobj.value_map[att])
                 else:
                     raise Exception("Invalid attributes", "attribute_order")
-            row_str = row_str.rstrip() # remove the single excessive \t on the rhs.
-            payload += row_str
+            # turn the list of strings containing the row's attribute values into a single string, csv, then
+            # append to the payload.
+            csv_string = row_delimiter + (col_delimiter.join(row_str_list))
+            payload += csv_string
 
         with open(write_path, "w", encoding="utf-8") as write_file:
             write_file.writelines(payload)  # Write all the attributes to the first line

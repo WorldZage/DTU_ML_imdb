@@ -3,6 +3,7 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import data_generator as dg
+import aux_functions as au
 
 
 def write_filtered_movie_data_to_file():
@@ -19,15 +20,15 @@ def write_filtered_movie_data_to_file():
     ds.extend_attributes(basics_path, ["titleType", "genres", "isAdult", "startYear", "runtimeMinutes"])
     ds.filter_dataset(dg.title_type_filter("movie"))
     print(len(ds.data_map))
-    ds.write_to_file("collected_data.csv",
+    ds.write_to_file("collected_movie_data.csv",
                      ["tconst", "titleType", "genres", "runtimeMinutes", "startYear", "isAdult", "averageRating",
                       "numVotes"])
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    # write_filtered_movie_data_to_file()
-    pass
+    #write_filtered_movie_data_to_file()
+    au.read_csv_to_np("collected_movie_data.csv")
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
