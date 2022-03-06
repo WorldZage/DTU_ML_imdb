@@ -5,9 +5,7 @@
 import data_generator as dg
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    pass
+def write_filtered_movie_data_to_file():
     dataset_path_n_parents = "../../../"
     # dg.count_valid_rows()
     rating_path = dataset_path_n_parents + "datasets/title.ratings.tsv/data.tsv"
@@ -17,10 +15,19 @@ if __name__ == '__main__':
     ds.filter_dataset(dg.ratings_filter(1000))
     print(len(ds.data_map))
 
-    basics_path = dataset_path_n_parents+"datasets/title.basics.tsv/data.tsv"
-    ds.extend_attributes(basics_path, ["titleType", "isAdult", "startYear","runtimeMinutes"])
+    basics_path = dataset_path_n_parents + "datasets/title.basics.tsv/data.tsv"
+    ds.extend_attributes(basics_path, ["titleType", "genres", "isAdult", "startYear", "runtimeMinutes"])
     ds.filter_dataset(dg.title_type_filter("movie"))
     print(len(ds.data_map))
-    ds.write_to_file("test_data.txt")
+    ds.write_to_file("collected_data.csv",
+                     ["tconst", "titleType", "genres", "runtimeMinutes", "startYear", "isAdult", "averageRating",
+                      "numVotes"])
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    # write_filtered_movie_data_to_file()
+    pass
+
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

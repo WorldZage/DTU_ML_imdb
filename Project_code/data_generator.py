@@ -131,15 +131,23 @@ class DataSet:
     def filter_dataset(self, filter_func):
         filter_func(self)
 
-    def write_to_file(self, write_path, attr_order: [str] = None):
+    def write_to_file(self, write_path, attr_order: [str] = []):
         """
         :param write_path:  the destination of the file
         :param attr_order: an optional parameter for the
         :return: nothing
         """
-        # if an order for the attributes isn't supplied, do it alphabetically
-        if attr_order is None:
-            attr_order = sorted(self.attributes)
+
+        # Check if we're missing any attributes from the ordering list
+        missing_attr_from_order = [attr for attr in self.attributes if attr not in attr_order]
+        if missing_attr_from_order:
+            raise ValueError(f"Missing attributes {','.join(missing_attr_from_order)} from attribute-order list")
+
+        # Check if we're including any attributes in the ordering which don't exist:
+        invalid_attr_from_order = [attr for attr in attr_order if attr not in self.attributes]
+        if invalid_attr_from_order:
+            raise ValueError(f"Invalid attributes: {','.join(invalid_attr_from_order)}\nfound in attribute-order list")
+
         # Create the entire list of strings which will be written, & *then* we will write it to a file.
         # first, the attributes
         payload = ["\t".join(attr_order)]
