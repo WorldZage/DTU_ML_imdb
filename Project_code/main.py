@@ -77,10 +77,11 @@ if __name__ == '__main__':
     #for attr in summ_stats:
     #    print(attr)
 
-    y, X, col_idx_dict = pca.data_loading(df_movies, averageRating_name)
+    y, X, col_idx_dict = pca.data_loading(df_series, averageRating_name)
     # pca.visualize(y, X, col_idx_dict)
     all_numerical = np.vstack((y,X))
     all_numerical = all_numerical.T
-    # pca.PCA(all_numerical)
-    attr_names = [col_idx_dict[i] for i in sorted(col_idx_dict.keys())]
+    pca.PCA(all_numerical)
+
+    attr_names = ["averageRating"] + list(col_idx_dict.keys())
     pca.PCA_bar_plot(all_numerical, attr_names)
