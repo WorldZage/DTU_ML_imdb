@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import data_generator as dg
 import summary_statistics as su
+import pca_and_plots as pca
+from constants import *
 
 
 def write_filtered_movie_data_to_file():
@@ -56,19 +58,20 @@ def write_filtered_tvseries_data_to_file():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
+    """ Movie data part:"""
     # write_filtered_movie_data_to_file()
-    # df = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
-    # summ_stats = su.calculate_summary_stats(df, ["runtimeMinutes", "startYear", "averageRating", "numVotes"])
+    # df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
+    # summ_stats = su.calculate_summary_stats(df_movies, ["runtimeMinutes", "startYear", "averageRating", "numVotes"])
     # for attr in summ_stats:
     #    print(attr)
 
-
+    """ Series data part:"""
     # write_filtered_tvseries_data_to_file()
     df_series = pd.read_csv("collected_tvseries_data.csv", sep="\t", dtype=str)
-    summ_stats = su.calculate_summary_stats(df_series, ["runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes",
-                                "averageRating", "numVotes"])
-    for attr in summ_stats:
-        print(attr)
-
+    # summ_stats = su.calculate_summary_stats(df_series, ["runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes",
+    #                           "averageRating", "numVotes"])
+    #for attr in summ_stats:
+    #    print(attr)
+    pca.data_loading(df_series, averageRating_name)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
