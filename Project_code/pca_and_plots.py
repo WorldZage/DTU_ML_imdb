@@ -4,6 +4,7 @@ import numpy as np
 from constants import runtime_name, startYear_name, endYear_name, durationYears_name, nEpisodes_name, averageRating_name, \
     numVotes_name, genres_name
 
+
 def data_loading(df: pd.DataFrame,y_attr_name):
     col_names = list(df.columns)
     # extract our y data, the averageRating:
@@ -42,8 +43,7 @@ def data_loading(df: pd.DataFrame,y_attr_name):
         for i, genre in enumerate(unique_genres):
             for row_i,row_genres in enumerate(genres_data):
                 genre_col[row_i] = int(genre in row_genres) # 0 or 1
-            attr_to_X_col_idx[genre] = len(X_cols)
-            X_cols.append(genre_col)
+            # attr_to_X_col_idx[genre] = len(X_cols)
+            # X_cols.append(genre_col)
         X = np.vstack(X_cols)
-        print(f"{y = }, {X = }")
-
+        return y, X

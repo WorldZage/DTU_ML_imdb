@@ -17,7 +17,7 @@ def write_filtered_movie_data_to_file():
     ds = dg.DataSet(rating_path)
     print(len(ds.data_map))
 
-    ds.run_func_on_ds(dg.ratings_filter(250))
+    ds.run_func_on_ds(dg.ratings_filter(1000))
     print(len(ds.data_map))
 
     basics_path = dataset_path_n_parents + "datasets/title.basics.tsv/data.tsv"
@@ -73,5 +73,3 @@ if __name__ == '__main__':
     #for attr in summ_stats:
     #    print(attr)
     pca.data_loading(df_series, averageRating_name)
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
