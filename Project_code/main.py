@@ -38,7 +38,7 @@ def write_filtered_tvseries_data_to_file():
     ds = dg.DataSet(rating_path)
     print(len(ds.data_map))
 
-    ds.run_func_on_ds(dg.ratings_filter(150))
+    ds.run_func_on_ds(dg.ratings_filter(1000))
     print(len(ds.data_map))
 
     basics_path = dataset_path_n_parents + "datasets/title.basics.tsv/data.tsv"
@@ -59,6 +59,7 @@ def write_filtered_tvseries_data_to_file():
                       "numVotes"])
 
 
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     #    print(attr)
 
     """ Series data part:"""
-    #write_filtered_tvseries_data_to_file()
+    # write_filtered_tvseries_data_to_file()
     df_series = pd.read_csv("collected_tvseries_data.csv", sep="\t", dtype=str)
     # summ_stats = su.calculate_summary_stats(df_series, ["runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes",
     #                           "averageRating", "numVotes"])
@@ -78,10 +79,20 @@ if __name__ == '__main__':
     #    print(attr)
 
     y, X, col_idx_dict = pca.data_loading(df_series, averageRating_name)
-    # pca.visualize(y, X, col_idx_dict)
+    avgRate_data = y
+    x_data = X[col_idx_dict[endYear_name]]
+    print(col_idx_dict.items())
+    pca.visualize(x_data, avgRate_data)
     all_numerical = np.vstack((y,X))
     all_numerical = all_numerical.T
-    pca.PCA(all_numerical)
+    # normalize
+    Y = all_numerical * (1/np.std(all_numerical,axis=0))
+    np.set_printoptions(formatter={'all':lambda x: str(x)})
+    cov_mat = np.cov(Y.T).round(3)
 
+    print(f"cov.mat: {cov_mat}")
+    pca.PCA(all_numerical)
     attr_names = ["averageRating"] + list(col_idx_dict.keys())
     pca.PCA_bar_plot(all_numerical, attr_names)
+
+    pca.norm_plots(all_numerical.T, attr_names)

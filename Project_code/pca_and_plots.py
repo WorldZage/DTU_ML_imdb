@@ -50,9 +50,11 @@ def data_loading(df: pd.DataFrame,y_attr_name):
     return y, X, attr_to_X_col_idx
 
 
-def visualize(y, X, col_idx_dict):
-    startYear_col = col_idx_dict[startYear_name]
-    plt.plot(X[startYear_col], y, 'o', alpha=.1)
+def visualize(X_axis_data, Y_axis_data):
+    plt.title("startyear vs avg. rating")
+    plt.xlabel("start year")
+    plt.ylabel("avg. rating, from 0-10")
+    plt.plot(X_axis_data, Y_axis_data, 'o', alpha=.1)
     plt.show()
 
 
@@ -91,9 +93,8 @@ def PCA_bar_plot(X, attributeNames):
     U, S, Vh = np.linalg.svd(Y, full_matrices=False)
     V = Vh.T
     print(attributeNames)
-    pcs = [0, 1, 2, 3, 5, 6]
+    pcs = [0, 1, 2, 3]
     legendStrs = ['PC' + str(e + 1) for e in pcs]
-    c = ['r', 'g', 'b']
     bw = .1
     r = np.arange(1, M + 1)
     for i in pcs:
@@ -105,3 +106,12 @@ def PCA_bar_plot(X, attributeNames):
     plt.grid()
     plt.title('IMDb: PCA Component Coefficients')
     plt.show()
+
+def norm_plots(num_data, col_names):
+    for i, col in enumerate(num_data):
+        plt.hist(col, 20)
+        plt.ylabel("occurrences")
+        plt.xlabel(col_names[i])
+        plt.title(col_names[i])
+        plt.grid(axis="both")
+        plt.show()

@@ -260,6 +260,20 @@ def ratings_filter(min_n_votes):
     return ds_arg_func
 
 
+def remove_outliers():
+    outlier_t_const = []
+
+    def ds_arg_func(dataset):
+        filtered_dataset = {}
+        for tconst, row in dataset.data_map.items():
+            row_data = row.value_map.values()
+            if "\\N" not in row_data:
+                filtered_dataset[tconst] = row
+        dataset.data_map = filtered_dataset
+
+    return ds_arg_func
+
+
 def missing_data_filter():
     # remove rows missing any data:
     def ds_arg_func(dataset):
