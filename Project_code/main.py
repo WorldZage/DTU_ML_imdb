@@ -25,6 +25,8 @@ def write_filtered_movie_data_to_file():
                                                    ["titleType", "genres", "isAdult", "startYear", "runtimeMinutes"]))
     ds.run_func_on_ds(dg.title_type_filter("movie"))
     print(len(ds.data_map))
+
+    ds.run_func_on_ds(dg.missing_data_filter())
     ds.write_to_file("collected_movie_data.csv",
                      ["tconst", "titleType", "genres", "runtimeMinutes", "startYear", "isAdult", "averageRating",
                       "numVotes"])
@@ -50,6 +52,8 @@ def write_filtered_tvseries_data_to_file():
 
     ds.run_func_on_ds(dg.extend_show_duration())
 
+    ds.run_func_on_ds(dg.missing_data_filter())
+
     ds.write_to_file("collected_tvseries_data.csv",
                      ["tconst", "titleType", "genres", "runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes", "isAdult", "averageRating",
                       "numVotes"])
@@ -60,16 +64,23 @@ if __name__ == '__main__':
 
     """ Movie data part:"""
     # write_filtered_movie_data_to_file()
-    # df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
+    df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
     # summ_stats = su.calculate_summary_stats(df_movies, ["runtimeMinutes", "startYear", "averageRating", "numVotes"])
     # for attr in summ_stats:
     #    print(attr)
 
     """ Series data part:"""
-    # write_filtered_tvseries_data_to_file()
+    #write_filtered_tvseries_data_to_file()
     df_series = pd.read_csv("collected_tvseries_data.csv", sep="\t", dtype=str)
     # summ_stats = su.calculate_summary_stats(df_series, ["runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes",
     #                           "averageRating", "numVotes"])
     #for attr in summ_stats:
     #    print(attr)
-    pca.data_loading(df_series, averageRating_name)
+
+    y, X, col_idx_dict = pca.data_loading(df_movies, averageRating_name)
+    # pca.visualize(y, X, col_idx_dict)
+    all_numerical = np.vstack((y,X))
+    all_numerical = all_numerical.T
+    # pca.PCA(all_numerical)
+    attr_names = [col_idx_dict[i] for i in sorted(col_idx_dict.keys())]
+    pca.PCA_bar_plot(all_numerical, attr_names)
