@@ -2,9 +2,10 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import pandas as pd
+import numpy as np
 import data_generator as dg
-import aux_functions as au
-
+import summary_statistics as su
 
 def write_filtered_movie_data_to_file():
     dataset_path_n_parents = "../../../"
@@ -27,8 +28,11 @@ def write_filtered_movie_data_to_file():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    #write_filtered_movie_data_to_file()
-    au.read_csv_to_np("collected_movie_data.csv")
-
-
+    # write_filtered_movie_data_to_file()
+    df = pd.read_csv("collected_movie_data.csv", sep="\t")
+    # the first 3 rows:
+    # print(df.values[:3])
+    # print(np.asarray(df.values[:, 3]))
+    # print(df.columns)
+    su.calculate_summary_stats(df,["runtimeMinutes","startYear","averageRating","numVotes"])
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

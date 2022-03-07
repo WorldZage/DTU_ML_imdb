@@ -148,7 +148,7 @@ class DataSet:
         if invalid_attr_from_order:
             raise ValueError(f"Invalid attributes: {','.join(invalid_attr_from_order)}\nfound in attribute-order list")
 
-        col_delimiter = ","
+        col_delimiter = "\t"
         row_delimiter = "\n"
         # Create the entire list of strings which will be written, & *then* we will write it to a file.
         # first, the attributes
