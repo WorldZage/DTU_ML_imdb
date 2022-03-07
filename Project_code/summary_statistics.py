@@ -1,21 +1,28 @@
 # this script will be used to calculate the summary statistics of attributes in a dataset.
 import pandas as pd
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass, field, asdict
 
 
-@dataclass(repr=True)
+@dataclass()
 class SumStats:
-    attr_name : str
-    col_idx : int
-    median : float = 0.0
-    mean : float = 0.0
-    min : float = np.inf
-    max : float = -np.inf
-    std : float = 0.0
-    obs : float = 0.0
+    attr_name: str
+    col_idx: int
+    mean: float = 0.0
+    std: float = 0.0
+    obs: float = 0.0
+    quantiles: list = field(default_factory=list)
 
-
+    def __repr__(self):
+        """
+        Function for representing a class instance as a string. Called when using print() on an instance of the class.
+        :return:
+        """
+        prec = 3 # decimal precision
+        stats = f"mean = {round(self.mean,prec)}. std = {round(self.std,prec)}. obs = {round(self.obs,prec)}"
+        # using list comprehension to remove scientific notation from representation
+        stats += f", quantiles (q0,q0.5,q1) = {[round(q,prec) for q in self.quantiles]}"
+        return f"{self.attr_name}: {stats}"
 
 def calculate_summary_stats(df: pd.DataFrame, attribute_names: [str]):
     """
@@ -29,7 +36,7 @@ def calculate_summary_stats(df: pd.DataFrame, attribute_names: [str]):
     # for attribute in attribute names:
     # calculate the summary statistic of that row
     df_columns = list(df.columns)
-    summ_stats = [SumStats(attr_name, col_idx = df_columns.index(attr_name)) for \
+    summ_stats = [SumStats(attr_name, col_idx=df_columns.index(attr_name)) for \
                   attr_name in attribute_names]
     data = df.values
 
@@ -48,10 +55,9 @@ def calculate_summary_stats(df: pd.DataFrame, attribute_names: [str]):
         col_data = np.asarray([float(value) for value in col_data if is_numerical(value)])
         # assign the summary statistics:
         attr.obs = len(col_data)
-        attr.mean = col_data.mean(); attr.median = np.median(col_data)
-        attr.max = col_data.max(); attr.min = col_data.min()
+        attr.mean = col_data.mean()
+        quantile_percentages = [0, 0.5, 1.0]
+        attr.quantiles = np.quantile(col_data, q=quantile_percentages)
         attr.std = col_data.std()
-        print(f"{attr}")
 
     return summ_stats
-
