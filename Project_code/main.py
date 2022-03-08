@@ -73,16 +73,16 @@ if __name__ == '__main__':
     """ Series data part:"""
     # write_filtered_tvseries_data_to_file()
     df_series = pd.read_csv("collected_tvseries_data.csv", sep="\t", dtype=str)
-    # summ_stats = su.calculate_summary_stats(df_series, ["runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes",
-    #                           "averageRating", "numVotes"])
-    #for attr in summ_stats:
-    #    print(attr)
+    summ_stats = su.calculate_summary_stats(df_series, ["runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes",
+                               "averageRating", "numVotes"])
+    for attr in summ_stats:
+        print(attr)
 
     y, X, col_idx_dict = pca.data_loading(df_series, averageRating_name)
     avgRate_data = y
     x_data = X[col_idx_dict[endYear_name]]
     print(col_idx_dict.items())
-    pca.visualize(x_data, avgRate_data)
+    # pca.visualize(x_data, avgRate_data)
     all_numerical = np.vstack((y,X))
     all_numerical = all_numerical.T
     # normalize
@@ -91,8 +91,9 @@ if __name__ == '__main__':
     cov_mat = np.cov(Y.T).round(3)
 
     print(f"cov.mat: {cov_mat}")
-    pca.PCA(all_numerical)
+    #pca.PCA(all_numerical)
     attr_names = ["averageRating"] + list(col_idx_dict.keys())
-    pca.PCA_bar_plot(all_numerical, attr_names)
+    #pca.PCA_bar_plot(all_numerical, attr_names)
 
-    pca.norm_plots(all_numerical.T, attr_names)
+    #pca.norm_plots(all_numerical.T, attr_names)
+    pca.project_plot(y,all_numerical)
