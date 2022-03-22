@@ -1,5 +1,5 @@
 # Functions for checking the size of our dataset
-dataset_path_n_parents = "../../../"
+dataset_path_n_parents = "../../"
 
 
 # valid_ratings_set(), valid_movies_set() and count_valid_rows() are used purely for very early explorative analysis:
