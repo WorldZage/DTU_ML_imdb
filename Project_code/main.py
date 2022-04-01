@@ -181,6 +181,8 @@ if __name__ == '__main__':
     #force to be float
     X_conc=np.array(X_conc, dtype=float)
     
+    X_highrates = np.delete(X_conc, np.where(X_conc[:,2] < 7)[0], axis=0)
+    
     #normalize
     X_norm = X_conc * (1/np.std(X_conc,axis=0))
     cov_mat = np.cov(X_norm.T).round(3)
@@ -190,10 +192,10 @@ if __name__ == '__main__':
     # attr_cov = np.delete(attr_dict_conc, [attr_dict_df1[tconst],attr_dict_df2[movie_link_name]+ncols1], 0)
     # attr_cov = attr_cov.T
     
-    X_highrates = np.delete(X_conc, np.where(X_conc[:,2] < 7)[0], axis=0)
+
                                 
-    X = np.delete(X_highrates, [attr_dict_df1[averageRating_name]], 1)
-    y = X_highrates[:,attr_dict_df1[averageRating_name]]
+    X = np.delete(X_highrates, [attr_dict_df1[numVotes_name]], 1)
+    y = X_highrates[:,attr_dict_df1[numVotes_name]]
     
     #take out 1-startYear; 4-movie_facebook_likes; 9-budget
     X = np.delete(X, [1,4,8], 1)
