@@ -55,14 +55,14 @@ def linear_regression(y, X):
     print("applying ex 5.2 \n")
     
     # Class names
-    classNames = ['HighRated', 'LowRated']
+    #classNames = ['HighRated', 'LowRated']
     
 
     # Fit ordinary least squares regression model
     model = lm.LinearRegression()
     model.fit(X,y)
 
-    # Predict alcohol content
+    # Predict average ratings
     y_est = model.predict(X)
     residual = y_est-y
 
@@ -75,5 +75,7 @@ def linear_regression(y, X):
     hist(residual,40)
 
     show()
+    
+    return y, X
     
     
