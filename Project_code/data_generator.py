@@ -1,11 +1,13 @@
+from constants import *
 
 # Functions for checking the size of our dataset
 dataset_path_n_parents = "../../../"
 
+""" --- Assignment 1 Data generation functions --- """
+
 
 # valid_ratings_set(), valid_movies_set() and count_valid_rows() are used purely for very early explorative analysis:
 # figuring out the size of a dataset which had been slightly filtered (titleType, number of ratings).
-
 def valid_ratings_set():
     rating_path = dataset_path_n_parents + "datasets/title.ratings.tsv/data.tsv"
     min_counts = 1000
@@ -63,12 +65,14 @@ def count_valid_rows():
     valid_movies = valid_movies_set()
     print(f"n_valids from intersection: {len(valid_ratings.intersection(valid_movies))}")
 
+
 class DataObj:
     """
-    This class corresponds to the data each row holds.
+    This class corresponds to the data a single row holds.
     The value_map is a dictionary, mapping attribute names (strings) to the row's value for that attribute.
-    for example, value_map["ttconst"] would return the title-id for the DataObj instance.
+    for example, value_map["tconst"] would return the title-id for the DataObj instance.
     """
+
     def __init__(self):
         self.attributes = []
         self.value_map = {}
@@ -78,9 +82,10 @@ class DataSet:
     """
     This class corresponds to the entire collected data, stored in memory.
     It contains a list of all the rows, with their respective attribute values, as DatObj instances.
-    The data_map variable is a dictionary, mapping ttconst, the unique title ids, to its respective DataObj instance.
+    The data_map variable is a dictionary, mapping tconst, the unique title ids, to its respective DataObj instance.
     In addition, the class has functions needed to extend or filter the dataset.
     """
+
     def __init__(self, init_ds_filepath):
         self.attributes = []
         self.data_map = {}
@@ -109,15 +114,12 @@ class DataSet:
                     row.attributes = attribute_names
 
                     # tconst seems to be always stored in the first column, but we want to make sure.
-                    tconst = split_line[attribute_names.index("tconst")]  # the tconst of the row.
+                    tconst = split_line[attribute_names.index(tconst_name)]  # the tconst of the row.
                     for (idx, att) in enumerate(attribute_names):
                         row.value_map[att] = split_line[idx]
                     self.data_map[tconst] = row
                 except Exception as e:
                     print(e)
-
-    def run_func_on_ds(self, ds_func):
-        ds_func(self)
 
     def write_to_file(self, write_path, attr_order: [str] = []):
         """
@@ -159,175 +161,185 @@ class DataSet:
             write_file.writelines(payload)  # Write all the attributes to the first line
 
 
-def extend_by_file_and_tconst(ds_extension_filepath: str, wanted_attributes: [str]):
-    def ds_arg_func(dataset):
-        with open(ds_extension_filepath, "r", encoding="utf-8") as ext_f:
-            ext_file_attribute_names = ext_f.readline().strip().split("\t")
-            attr_to_col_idx = {}
-            for att in wanted_attributes:
-                col_idx = ext_file_attribute_names.index(att)
-                attr_to_col_idx[att] = col_idx
-            dataset.attributes += wanted_attributes
+def extend_by_file_and_tconst(dataset: DataSet, ds_extension_filepath: str, wanted_attributes: [str]):
+    with open(ds_extension_filepath, "r", encoding="utf-8") as ext_f:
+        ext_file_attribute_names = ext_f.readline().strip().split("\t")
+        attr_to_col_idx = {}
+        for att in wanted_attributes:
+            col_idx = ext_file_attribute_names.index(att)
+            attr_to_col_idx[att] = col_idx
+        dataset.attributes += wanted_attributes
 
-            while True:
-                try:
-                    # read the line and format it to be useful
-                    line = ext_f.readline()
-                    if not line:
-                        break
-                    line = line.strip()
-                    split_line = line.split("\t")
+        while True:
+            # read the line and format it to be useful
+            line = ext_f.readline()
+            if not line:
+                break
+            line = line.strip()
+            split_line = line.split("\t")
 
-                    # TODO: use attr_to_col_idx["tconst"] here instead.
-                    tconst = split_line[ext_file_attribute_names.index("tconst")]
-                    # only extend the attributes of titles already present in the dataset:
-                    if tconst in dataset.data_map.keys():
-                        row = dataset.data_map[tconst]
+            # TODO: use attr_to_col_idx[tconst_name] here instead.
+            tconst = split_line[ext_file_attribute_names.index(tconst_name)]
+            # only extend the attributes of titles already present in the dataset:
+            if tconst in dataset.data_map.keys():
+                row = dataset.data_map[tconst]
 
-                        for (att) in wanted_attributes:
-                            col_idx = ext_file_attribute_names.index(att)
-                            row.value_map[att] = split_line[col_idx]
-                except Exception as e:
-                    raise e
-
-    return ds_arg_func
+                for (att) in wanted_attributes:
+                    col_idx = ext_file_attribute_names.index(att)
+                    row.value_map[att] = split_line[col_idx]
 
 
-def extend_n_episodes(episode_file_path,minEpisodes=0):
+def extend_n_episodes(dataset: DataSet, episode_file_path: str, minEpisodes: int = 0):
     # extension function function for adding attribute of how many episodes a show had.
-    def ds_arg_func(dataset):
-        new_attr_name = "nEpisodes"
-        # add the attribute name to the list of attributes for the dataset:
-        dataset.attributes += [new_attr_name]
+    new_attr_name = "nEpisodes"
+    # add the attribute name to the list of attributes for the dataset:
+    dataset.attributes += [new_attr_name]
 
-        # then add a default value of 0 for row
-        for row in dataset.data_map.values():
-            row.value_map[new_attr_name] = 0
+    # then add a default value of 0 for row
+    for row in dataset.data_map.values():
+        row.value_map[new_attr_name] = 0
 
-        # Then, traverse the episode_file, and for each episode, increment the number of episodes for the parent-show tconst.
-        with open(episode_file_path, "r", encoding="utf-8") as ext_f:
-            ext_file_attribute_names = ext_f.readline().strip().split("\t")
-            # the columnn index for the parent tconst:
-            p_tconst_col_name = "parentTconst"
-            p_tconst_col_idx = ext_file_attribute_names.index(p_tconst_col_name)
-            while True:
-                try:
-                    # read the line and format it to be useful
-                    line = ext_f.readline()
-                    if not line:
-                        break
-                    line = line.strip()
-                    split_line = line.split("\t")
-
-                    p_tconst = split_line[p_tconst_col_idx]
-                    # increment the number of episodes for the parent-show:
-                    dataset.data_map[p_tconst].value_map[new_attr_name] += 1
-                except KeyError as e:
-                    # case of the parent show's tconst not being in our dataset (removed by filtering)
-                    pass
-
-        # then, only keep the tv series with greater number of episodes than minEpisodes
-        filtered_dataset = {}
-        for tconst, row in dataset.data_map.items():
-            row_n_episodes = row.value_map[new_attr_name]
-            if row_n_episodes > 0:
-                filtered_dataset[tconst] = row
-        dataset.data_map = filtered_dataset
-
-    return ds_arg_func
-
-def extend_show_duration():
-    # extension function for adding the duration of shows, i.e. how many years they ran between first year and final year.
-    def ds_arg_func(dataset):
-        new_attr_name = "durationYears"
-        dataset.attributes += [new_attr_name]
-        for row in dataset.data_map.values():
+    # Then, traverse the episode_file, and for each episode, increment the number of episodes for the parent-show tconst.
+    with open(episode_file_path, "r", encoding="utf-8") as ext_f:
+        ext_file_attribute_names = ext_f.readline().strip().split("\t")
+        # the columnn index for the parent tconst:
+        p_tconst_col_name = "parentTconst"
+        p_tconst_col_idx = ext_file_attribute_names.index(p_tconst_col_name)
+        while True:
             try:
-                startYear = int(row.value_map["startYear"])
-                endYear = int(row.value_map["endYear"])
-                duration = endYear - startYear
-                row.value_map[new_attr_name] = duration
-            except ValueError as e:
-                # in case either startYear or endYear was missing or N/A
-                row.value_map[new_attr_name] = "\\N"
-    return ds_arg_func
+                # read the line and format it to be useful
+                line = ext_f.readline()
+                if not line:
+                    break
+                line = line.strip()
+                split_line = line.split("\t")
+
+                p_tconst = split_line[p_tconst_col_idx]
+                # increment the number of episodes for the parent-show:
+                dataset.data_map[p_tconst].value_map[new_attr_name] += 1
+            except KeyError as e:
+                # case of the parent show's tconst not being in our dataset (removed by filtering)
+                pass
+
+    # then, only keep the tv series with greater number of episodes than minEpisodes
+    filtered_dataset = {}
+    for tconst, row in dataset.data_map.items():
+        row_n_episodes = row.value_map[new_attr_name]
+        if row_n_episodes >= minEpisodes:
+            filtered_dataset[tconst] = row
+    dataset.data_map = filtered_dataset
 
 
-def ratings_filter(min_n_votes):
+def extend_show_duration(dataset: DataSet):
+    # extension function for adding the duration of shows, i.e. how many years they ran between first year and final year.
+    new_attr_name = "durationYears"
+    dataset.attributes += [new_attr_name]
+    for row in dataset.data_map.values():
+        try:
+            startYear = int(row.value_map["startYear"])
+            endYear = int(row.value_map["endYear"])
+            duration = endYear - startYear
+            row.value_map[new_attr_name] = duration
+        except ValueError as e:
+            # in case either startYear or endYear was missing or N/A
+            row.value_map[new_attr_name] = "\\N"
+
+
+def ratings_filter(dataset: DataSet, min_n_votes):
     # filter on the dataset for only using titles who have above a certain number of votes
-    def ds_arg_func(dataset):
-        filtered_dataset = {}
-        for tconst, row in dataset.data_map.items():
-            num_votes = row.value_map.get("numVotes")
-            if num_votes:
-                if int(num_votes) > min_n_votes:
-                    filtered_dataset[tconst] = row
-            else:
-                raise Exception("Dataset is missing attribute", "numVotes")
-        dataset.data_map = filtered_dataset
-
-    return ds_arg_func
+    filtered_dataset = {}
+    for tconst, row in dataset.data_map.items():
+        num_votes = row.value_map.get("numVotes")
+        if num_votes:
+            if int(num_votes) > min_n_votes:
+                filtered_dataset[tconst] = row
+        else:
+            raise Exception("Dataset is missing attribute", "numVotes")
+    dataset.data_map = filtered_dataset
 
 
-def remove_outliers():
+def remove_outliers(dataset: DataSet):
     outlier_t_const = []
-
-    def ds_arg_func(dataset):
-        filtered_dataset = {}
-        for tconst, row in dataset.data_map.items():
-            row_data = row.value_map.values()
-            if "\\N" not in row_data:
-                filtered_dataset[tconst] = row
-        dataset.data_map = filtered_dataset
-
-    return ds_arg_func
+    filtered_dataset = {}
+    for tconst, row in dataset.data_map.items():
+        row_data = row.value_map.values()
+        if "\\N" not in row_data:
+            filtered_dataset[tconst] = row
+    dataset.data_map = filtered_dataset
 
 
-def missing_data_filter():
-    # remove rows missing any data:
-    def ds_arg_func(dataset):
-        filtered_dataset = {}
-        for tconst, row in dataset.data_map.items():
-            row_data = row.value_map.values()
-            if "\\N" not in row_data:
-                filtered_dataset[tconst] = row
-        dataset.data_map = filtered_dataset
-
-    return ds_arg_func
+def missing_data_filter(dataset: DataSet):
+    """ removes rows which are missing any data, meaning the column holds an "\N" value """
+    filtered_dataset = {}
+    for tconst, row in dataset.data_map.items():
+        row_data = row.value_map.values()
+        if "\\N" not in row_data:
+            filtered_dataset[tconst] = row
+    dataset.data_map = filtered_dataset
 
 
-def data_transformation(attribute_name, transformation_func):
-    # perform logarithmic transformation on the data of an attribute:
-    def ds_arg_func(dataset):
-        for tconst, row in dataset.data_map.items():
-            row_data = row.value_map
-            row_data[attribute_name] = transformation_func(row_data[attribute_name])
-    return ds_arg_func
 
 # filter on the dataset for only using titles which are movies.
-def title_type_filter(only_title_type):
-    def ds_arg_func(dataset):
-        filtered_dataset = {}
-        for tconst, row in dataset.data_map.items():
-            title_type = row.value_map.get("titleType")
-            if title_type:
-                if title_type == only_title_type:
-                    filtered_dataset[tconst] = row
-            else:
-                raise Exception("Dataset is missing attribute", "title type")
-        dataset.data_map = filtered_dataset
-
-    return ds_arg_func
-
-def runtime_filter():
-    # filter to only include rows with runtime greater than 0 minutes.
-    def ds_arg_func(dataset):
-        filtered_dataset = {}
-        for tconst, row in dataset.data_map.items():
-            runtime = int(row.value_map.get("runtimeMinutes"))
-            if runtime > 0:
+def title_type_filter(dataset: DataSet, only_title_type):
+    filtered_dataset = {}
+    for tconst, row in dataset.data_map.items():
+        title_type = row.value_map.get("titleType")
+        if title_type:
+            if title_type == only_title_type:
                 filtered_dataset[tconst] = row
-            else:
-                raise Exception("Dataset is missing attribute", "title type")
-        dataset.data_map = filtered_dataset
-    return ds_arg_func
+        else:
+            raise Exception("Dataset is missing attribute", "title type")
+    dataset.data_map = filtered_dataset
+
+
+def runtime_filter(dataset: DataSet):
+    """ filter to only include rows with runtime greater than 0 minutes. """
+    filtered_dataset = {}
+    for tconst, row in dataset.data_map.items():
+        runtime = int(row.value_map.get("runtimeMinutes"))
+        if runtime > 0:
+            filtered_dataset[tconst] = row
+    dataset.data_map = filtered_dataset
+
+
+""" --- Assignment 2 Data generation functions --- """
+""" Function for extending the dataset by the "movie_metadata.csv" dataset
+    which contains the following attributes:
+        color,director_name,num_critic_for_reviews,duration,director_facebook_likes,
+        actor_3_facebook_likes,actor_2_name,actor_1_facebook_likes,gross,genres,
+        actor_1_name,movie_title,num_voted_users,cast_total_facebook_likes,actor_3_name,
+        facenumber_in_poster,plot_keywords,movie_imdb_link,num_user_for_reviews,
+        language,country,content_rating,budget,title_year,actor_2_facebook_likes,
+        imdb_score,aspect_ratio,movie_facebook_likes.
+    Most of these attribute are 
+    
+    
+"""
+
+
+def extend_by_metadatafile(dataset: DataSet, ds_extension_filepath: str, wanted_attributes: [str]):
+    with open(ds_extension_filepath, "r", encoding="utf-8") as ext_f:
+        ext_file_attribute_names = ext_f.readline().strip().split(",")
+        attr_to_col_idx = {}
+        for att in wanted_attributes:
+            col_idx = ext_file_attribute_names.index(att)
+            attr_to_col_idx[att] = col_idx
+        dataset.attributes += wanted_attributes
+
+        while True:
+            # read the line and format it to be useful
+            line = ext_f.readline()
+            if not line:
+                break
+            line = line.strip()
+            split_line = line.split("\t")
+
+            # TODO: use attr_to_col_idx[tconst_name] here instead.
+            tconst = split_line[ext_file_attribute_names.index(tconst_name)]
+            # only extend the attributes of titles already present in the dataset:
+            if tconst in dataset.data_map.keys():
+                row = dataset.data_map[tconst]
+
+                for (att) in wanted_attributes:
+                    col_idx = ext_file_attribute_names.index(att)
+                    row.value_map[att] = split_line[col_idx]

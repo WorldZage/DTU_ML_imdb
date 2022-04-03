@@ -6,7 +6,7 @@ from constants import runtime_name, startYear_name, endYear_name, durationYears_
 import matplotlib.pyplot as plt
 
 
-def data_loading(df: pd.DataFrame,y_attr_name):
+def data_loading_part1(df: pd.DataFrame, y_attr_name):
     col_names = list(df.columns)
     # extract our y data, the averageRating:
     y_col_idx = col_names.index(y_attr_name)
@@ -26,7 +26,7 @@ def data_loading(df: pd.DataFrame,y_attr_name):
             col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=float)
             X_cols.append(col_data)
 
-    # encoding the genres:
+    # hot-encoding the genres:
     """if genres_name in X_col_names:
         # So far, genres are stored as comma-separated strings in the same column.
         # We want to encode genres to be K binary columns, with K = number of different genres
@@ -45,7 +45,7 @@ def data_loading(df: pd.DataFrame,y_attr_name):
                 genre_col[row_i] = int(genre in row_genres) # 0 or 1
             # attr_to_X_col_idx[genre] = len(X_cols)
             # X_cols.append(genre_col)
-        """
+    """
     X = np.vstack(X_cols)
     return y, X, attr_to_X_col_idx
 

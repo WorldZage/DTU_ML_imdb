@@ -17,16 +17,16 @@ def write_filtered_movie_data_to_file():
     ds = dg.DataSet(rating_path)
     print(len(ds.data_map))
 
-    ds.run_func_on_ds(dg.ratings_filter(1000))
+    dg.ratings_filter(ds, min_n_votes=1000)
     print(len(ds.data_map))
 
     basics_path = dataset_path_n_parents + "datasets/title.basics.tsv/data.tsv"
-    ds.run_func_on_ds(dg.extend_by_file_and_tconst(basics_path,
-                                                   ["titleType", "genres", "isAdult", "startYear", "runtimeMinutes"]))
-    ds.run_func_on_ds(dg.title_type_filter("movie"))
+    dg.extend_by_file_and_tconst(ds,basics_path, ["titleType", "genres", "isAdult", "startYear", "runtimeMinutes"])
+    dg.title_type_filter(ds, only_title_type="movie")
     print(len(ds.data_map))
 
-    ds.run_func_on_ds(dg.missing_data_filter())
+    dg.missing_data_filter(ds)
+
     ds.write_to_file("collected_movie_data.csv",
                      ["tconst", "titleType", "genres", "runtimeMinutes", "startYear", "isAdult", "averageRating",
                       "numVotes"])
@@ -38,25 +38,23 @@ def write_filtered_tvseries_data_to_file():
     ds = dg.DataSet(rating_path)
     print(len(ds.data_map))
 
-    ds.run_func_on_ds(dg.ratings_filter(1000))
+    dg.ratings_filter(ds,min_n_votes=1000)
     print(len(ds.data_map))
 
     basics_path = dataset_path_n_parents + "datasets/title.basics.tsv/data.tsv"
-    ds.run_func_on_ds(dg.extend_by_file_and_tconst(basics_path,
-                                                   ["titleType", "genres", "isAdult", "startYear", "endYear", "runtimeMinutes"]))
-    ds.run_func_on_ds(dg.title_type_filter("tvSeries"))
+    dg.extend_by_file_and_tconst(ds, basics_path, ["titleType", "genres", "isAdult", "startYear", "endYear", "runtimeMinutes"])
+
+    dg.title_type_filter(ds,"tvSeries")
     print(len(ds.data_map))
 
     episode_path = dataset_path_n_parents + "datasets/title.episode.tsv/data.tsv"
-    ds.run_func_on_ds(dg.extend_n_episodes(episode_path,minEpisodes=1))
+    dg.extend_n_episodes(ds, episode_path, minEpisodes=1)
 
-    ds.run_func_on_ds(dg.extend_show_duration())
+    dg.extend_show_duration(ds)
 
-    # cleanup
-    ds.run_func_on_ds(dg.missing_data_filter())
-    ds.run_func_on_ds(dg.runtime_filter())
-
-    # ds.run_func_on_ds(dg.data_transformation(numVotes_name, np.log))
+    # filtering rows which have missing data
+    dg.missing_data_filter(ds)
+    dg.runtime_filter(ds)
 
     ds.write_to_file("collected_tvseries_data.csv",
                      ["tconst", "titleType", "genres", "runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes", "isAdult", "averageRating",
@@ -82,7 +80,7 @@ if __name__ == '__main__':
     for attr in summ_stats:
         print(attr)
 
-    y, X, col_idx_dict = pca.data_loading(df_series, averageRating_name)
+    y, X, col_idx_dict = pca.data_loading_part1(df_series, averageRating_name)
     avgRate_data = y
     # print(col_idx_dict.items())
 
