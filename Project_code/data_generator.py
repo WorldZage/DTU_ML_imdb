@@ -1,3 +1,4 @@
+
 # Functions for checking the size of our dataset
 dataset_path_n_parents = "../../../"
 
@@ -192,7 +193,7 @@ def extend_by_file_and_tconst(ds_extension_filepath: str, wanted_attributes: [st
     return ds_arg_func
 
 
-def extend_n_episodes(episode_file_path):
+def extend_n_episodes(episode_file_path,minEpisodes=0):
     # extension function function for adding attribute of how many episodes a show had.
     def ds_arg_func(dataset):
         new_attr_name = "nEpisodes"
@@ -224,6 +225,14 @@ def extend_n_episodes(episode_file_path):
                 except KeyError as e:
                     # case of the parent show's tconst not being in our dataset (removed by filtering)
                     pass
+
+        # then, only keep the tv series with greater number of episodes than minEpisodes
+        filtered_dataset = {}
+        for tconst, row in dataset.data_map.items():
+            row_n_episodes = row.value_map[new_attr_name]
+            if row_n_episodes > 0:
+                filtered_dataset[tconst] = row
+        dataset.data_map = filtered_dataset
 
     return ds_arg_func
 
@@ -287,6 +296,14 @@ def missing_data_filter():
     return ds_arg_func
 
 
+def data_transformation(attribute_name, transformation_func):
+    # perform logarithmic transformation on the data of an attribute:
+    def ds_arg_func(dataset):
+        for tconst, row in dataset.data_map.items():
+            row_data = row.value_map
+            row_data[attribute_name] = transformation_func(row_data[attribute_name])
+    return ds_arg_func
+
 # filter on the dataset for only using titles which are movies.
 def title_type_filter(only_title_type):
     def ds_arg_func(dataset):
@@ -300,4 +317,17 @@ def title_type_filter(only_title_type):
                 raise Exception("Dataset is missing attribute", "title type")
         dataset.data_map = filtered_dataset
 
+    return ds_arg_func
+
+def runtime_filter():
+    # filter to only include rows with runtime greater than 0 minutes.
+    def ds_arg_func(dataset):
+        filtered_dataset = {}
+        for tconst, row in dataset.data_map.items():
+            runtime = int(row.value_map.get("runtimeMinutes"))
+            if runtime > 0:
+                filtered_dataset[tconst] = row
+            else:
+                raise Exception("Dataset is missing attribute", "title type")
+        dataset.data_map = filtered_dataset
     return ds_arg_func

@@ -48,16 +48,20 @@ def write_filtered_tvseries_data_to_file():
     print(len(ds.data_map))
 
     episode_path = dataset_path_n_parents + "datasets/title.episode.tsv/data.tsv"
-    ds.run_func_on_ds(dg.extend_n_episodes(episode_path))
+    ds.run_func_on_ds(dg.extend_n_episodes(episode_path,minEpisodes=1))
 
     ds.run_func_on_ds(dg.extend_show_duration())
 
+    # cleanup
     ds.run_func_on_ds(dg.missing_data_filter())
+    ds.run_func_on_ds(dg.runtime_filter())
+
+    # ds.run_func_on_ds(dg.data_transformation(numVotes_name, np.log))
 
     ds.write_to_file("collected_tvseries_data.csv",
                      ["tconst", "titleType", "genres", "runtimeMinutes", "startYear", "endYear", "durationYears", "nEpisodes", "isAdult", "averageRating",
                       "numVotes"])
-
+    print(f"Number of entries: {len(ds.data_map)}")
 
 
 # Press the green button in the gutter to run the script.
@@ -65,7 +69,7 @@ if __name__ == '__main__':
 
     """ Movie data part:"""
     # write_filtered_movie_data_to_file()
-    df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
+    # df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
     # summ_stats = su.calculate_summary_stats(df_movies, ["runtimeMinutes", "startYear", "averageRating", "numVotes"])
     # for attr in summ_stats:
     #    print(attr)
@@ -80,20 +84,40 @@ if __name__ == '__main__':
 
     y, X, col_idx_dict = pca.data_loading(df_series, averageRating_name)
     avgRate_data = y
-    x_data = X[col_idx_dict[endYear_name]]
-    print(col_idx_dict.items())
-    # pca.visualize(x_data, avgRate_data)
-    all_numerical = np.vstack((y,X))
+    # print(col_idx_dict.items())
+
+    ### Logarithmic transformation:
+    # number of votes:
+    col_id = col_idx_dict[numVotes_name]
+    log_data = np.log(X[col_id])
+    X[col_id] = log_data
+    #pca.visualize(log_data, avgRate_data)
+    # number of episodes
+    col_id = col_idx_dict[nEpisodes_name]
+    log_data = np.log(X[col_id])
+    X[col_id] = log_data
+    # runtime minutes
+    col_id = col_idx_dict[runtime_name]
+    log_data = np.log(X[col_id])
+    X[col_id] = log_data
+
+    """
+    x_data = X[col_idx_dict[numVotes_name]]
+    pca.visualize(x_data, avgRate_data)
+    """
+    all_numerical = np.vstack((y, X))
     all_numerical = all_numerical.T
     # normalize
     Y = all_numerical * (1/np.std(all_numerical,axis=0))
     np.set_printoptions(formatter={'all':lambda x: str(x)})
     cov_mat = np.cov(Y.T).round(3)
-
-    print(f"cov.mat: {cov_mat}")
-    #pca.PCA(all_numerical)
+    cor_mat = np.corrcoef(all_numerical.T).round(3)
+    # print(f"cov.mat: {cov_mat}")
+    print(cor_mat.shape)
+    print(f"pearson correlation coefficient matrix:\n{cor_mat}")
+    pca.PCA(all_numerical)
     attr_names = ["averageRating"] + list(col_idx_dict.keys())
     #pca.PCA_bar_plot(all_numerical, attr_names)
 
     #pca.norm_plots(all_numerical.T, attr_names)
-    pca.project_plot(y,all_numerical)
+    #pca.project_plot(y,all_numerical)

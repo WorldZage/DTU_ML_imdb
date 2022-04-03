@@ -570,7 +570,6 @@ tt0098830	tvSeries	Comedy	30	1990	1994	4	127	0	8.1	10858
 tt0098833	tvSeries	Comedy	55	1990	1993	3	23	0	8.4	12288
 tt0098834	tvSeries	Adventure,Drama,Family	24	1991	1991	0	4	0	8.2	1686
 tt0098837	tvSeries	Comedy	60	1990	1995	5	44	0	7.8	15536
-tt0098861	tvSeries	Animation,Comedy,Family	23	1990	1993	3	0	0	8.3	1429
 tt0098878	tvSeries	Comedy,Drama	60	1990	1995	5	110	0	8.3	16320
 tt0098882	tvSeries	Comedy,Drama	90	1990	2001	11	44	0	7.8	6411
 tt0098888	tvSeries	Comedy,Fantasy	30	1990	1993	3	73	0	7.9	5549
@@ -1426,7 +1425,6 @@ tt0352110	tvSeries	Comedy	23	2001	2012	11	135	0	7.1	2148
 tt0353049	tvSeries	Comedy,Music	22	2003	2006	3	33	0	8.7	61174
 tt0353115	tvSeries	Action,Adventure,Animation	22	2002	2005	3	52	0	5.8	2832
 tt0354262	tvSeries	Comedy	30	2002	2004	2	12	0	8.2	1949
-tt0356238	tvSeries	Animation,Comedy	90	1978	1985	7	0	0	8.3	2062
 tt0358323	tvSeries	Comedy	30	2002	2005	3	15	0	8.4	2713
 tt0358332	tvSeries	Comedy,Reality-TV	60	2003	2007	4	106	0	6.2	2348
 tt0358856	tvSeries	Comedy	29	2003	2006	3	23	0	7.6	23640
@@ -1766,7 +1764,6 @@ tt0493378	tvSeries	Comedy,Family,Game-Show	120	2005	2019	14	234	0	5.0	3914
 tt0493471	tvSeries	Comedy,Family	60	1999	2004	5	430	0	7.2	2616
 tt0494184	tvSeries	Crime,Drama	42	2006	2008	2	30	0	6.1	1230
 tt0494210	tvSeries	Comedy	30	2007	2007	0	6	0	6.2	1150
-tt0494627	tvSeries	Comedy,Drama	60	1995	2003	8	0	0	6.1	1188
 tt0496275	tvSeries	Drama	60	2007	2008	1	20	0	6.9	6900
 tt0496343	tvSeries	Comedy,Crime,Drama	45	2007	2008	1	20	0	7.8	8292
 tt0496356	tvSeries	Comedy,Romance	30	2006	2010	4	49	0	7.3	4994
@@ -1878,7 +1875,6 @@ tt0845746	tvSeries	Crime,Drama,Mystery	44	2005	2007	2	26	0	8.2	2082
 tt0846614	tvSeries	Comedy,Fantasy,Romance	40	1998	2001	3	108	0	6.1	2354
 tt0848539	tvSeries	Comedy,Drama	60	2007	2008	1	13	0	7.4	1517
 tt0849236	tvSeries	Animation,Comedy,Fantasy	30	2005	2009	4	22	0	5.9	1471
-tt0850645	tvSeries	Comedy,Family	90	1960	1972	12	0	0	8.6	1082
 tt0851851	tvSeries	Action,Drama,Fantasy	60	2008	2009	1	31	0	7.7	59504
 tt0852863	tvSeries	Action,Animation,Comedy	15	2007	2015	8	130	0	8.0	42108
 tt0855673	tvSeries	Action,Adventure,Animation	10	2006	2009	3	52	0	6.0	2626
@@ -2179,7 +2175,6 @@ tt11426660	tvSeries	Documentary,Sport	60	2020	2022	2	15	0	8.1	5922
 tt1143289	tvSeries	Comedy,Drama,Romance	30	2009	2009	0	7	0	7.3	1159
 tt11454722	tvSeries	Comedy,Drama	30	2021	2021	0	16	0	6.9	4535
 tt11455654	tvSeries	Drama,History,Mystery	54	2020	2020	0	8	0	7.8	2389
-tt1146332	tvSeries	Drama,History,Romance	50	2007	2007	0	0	0	7.8	1481
 tt11465278	tvSeries	Action,Adventure,Animation	26	2021	2022	1	18	0	6.0	1424
 tt1147691	tvSeries	Drama,Romance	90	2007	2009	2	71	0	6.4	2419
 tt1149608	tvSeries	Adventure,Comedy,Drama	45	2009	2011	2	55	0	7.5	9547
@@ -2200,7 +2195,6 @@ tt11691684	tvSeries	Crime,Mystery,Romance	70	2020	2020	0	17	0	8.7	6018
 tt11717394	tvSeries	Comedy,Drama,Family	25	2021	2021	0	10	0	6.9	3201
 tt1173202	tvSeries	Drama,History	90	2007	2009	2	83	0	8.0	1180
 tt1173427	tvSeries	Action,Animation,Comedy	22	2007	2014	7	120	0	7.3	10218
-tt1175621	tvSeries	Action,Documentary,Reality-TV	30	2007	2007	0	0	0	7.6	1140
 tt11769304	tvSeries	Comedy,Drama	84	2020	2021	1	24	0	8.8	4456
 tt1178180	tvSeries	Adventure,Animation,Comedy	11	2008	2010	2	69	0	7.8	13364
 tt1178522	tvSeries	Drama,Mystery,Romance	420	2008	2008	0	14	0	8.2	9493
@@ -2429,7 +2423,6 @@ tt1460205	tvSeries	Animation,Family	28	2009	2020	11	173	0	6.6	1113
 tt1462059	tvSeries	Action,Adventure,Drama	42	2011	2015	4	52	0	7.2	88183
 tt1466074	tvSeries	Crime,Drama,Mystery	100	1971	2003	32	68	0	8.3	33249
 tt1468284	tvSeries	Animation,Drama,Fantasy	325	2009	2009	0	13	0	8.1	1412
-tt1468453	tvSeries	Comedy	105	2008	2011	3	0	0	6.6	4693
 tt1468760	tvSeries	Talk-Show	60	2009	2017	8	178	0	6.0	1106
 tt1468773	tvSeries	Comedy	30	2009	2012	3	15	0	8.1	1319
 tt1470837	tvSeries	Adventure,Animation,Comedy	25	2008	2016	8	120	0	5.6	2420
@@ -3174,7 +3167,6 @@ tt2933198	tvSeries	Comedy,Family	40	2002	2003	1	145	0	7.6	5202
 tt2937900	tvSeries	Drama,History	58	2014	2015	1	21	0	8.5	47198
 tt2938522	tvSeries	Comedy,Fantasy	22	2013	2016	3	25	0	7.9	1559
 tt2950342	tvSeries	Animation,Comedy,Horror	15	2013	2019	6	32	0	7.2	8219
-tt2953680	tvSeries	Comedy,Family	40	2003	2004	1	0	0	6.6	3213
 tt2955402	tvSeries	Drama	43	2013	2016	3	55	0	8.1	5885
 tt2963254	tvSeries	Drama,Fantasy,Horror	60	2014	2017	3	36	0	7.2	23338
 tt2968404	tvSeries	Drama	42	2014	2014	0	13	0	6.7	3773
