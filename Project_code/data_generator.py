@@ -190,7 +190,13 @@ def extend_by_file_and_tconst(dataset: DataSet, ds_extension_filepath: str, want
 
 
 def extend_n_episodes(dataset: DataSet, episode_file_path: str, minEpisodes: int = 0):
-    # extension function function for adding attribute of how many episodes a show had.
+    """
+    extension function function for adding attribute of how many episodes a show had.
+    :param dataset:
+    :param episode_file_path:
+    :param minEpisodes:
+    :return:
+    """
     new_attr_name = "nEpisodes"
     # add the attribute name to the list of attributes for the dataset:
     dataset.attributes += [new_attr_name]
@@ -231,7 +237,11 @@ def extend_n_episodes(dataset: DataSet, episode_file_path: str, minEpisodes: int
 
 
 def extend_show_duration(dataset: DataSet):
-    # extension function for adding the duration of shows, i.e. how many years they ran between first year and final year.
+    """
+    extension function for adding the duration of shows, i.e. how many years they ran between first year and final year.
+    :param dataset:
+    :return:
+    """
     new_attr_name = "durationYears"
     dataset.attributes += [new_attr_name]
     for row in dataset.data_map.values():
@@ -245,8 +255,13 @@ def extend_show_duration(dataset: DataSet):
             row.value_map[new_attr_name] = "\\N"
 
 
-def ratings_filter(dataset: DataSet, min_n_votes):
-    # filter on the dataset for only using titles who have above a certain number of votes
+def num_ratings_filter(dataset: DataSet, min_n_votes):
+    """
+    filter on the dataset for only using titles who have above a certain number of votes
+    :param dataset:
+    :param min_n_votes:
+    :return:
+    """
     filtered_dataset = {}
     for tconst, row in dataset.data_map.items():
         num_votes = row.value_map.get("numVotes")
@@ -255,16 +270,6 @@ def ratings_filter(dataset: DataSet, min_n_votes):
                 filtered_dataset[tconst] = row
         else:
             raise Exception("Dataset is missing attribute", "numVotes")
-    dataset.data_map = filtered_dataset
-
-
-def remove_outliers(dataset: DataSet):
-    outlier_t_const = []
-    filtered_dataset = {}
-    for tconst, row in dataset.data_map.items():
-        row_data = row.value_map.values()
-        if "\\N" not in row_data:
-            filtered_dataset[tconst] = row
     dataset.data_map = filtered_dataset
 
 
@@ -278,9 +283,13 @@ def missing_data_filter(dataset: DataSet):
     dataset.data_map = filtered_dataset
 
 
-
-# filter on the dataset for only using titles which are movies.
 def title_type_filter(dataset: DataSet, only_title_type):
+    """
+    filter on the dataset for only including titles which are of the specified title type.
+    :param dataset:
+    :param only_title_type:
+    :return:
+    """
     filtered_dataset = {}
     for tconst, row in dataset.data_map.items():
         title_type = row.value_map.get("titleType")
@@ -311,7 +320,19 @@ def runtime_filter(dataset: DataSet):
         facenumber_in_poster,plot_keywords,movie_imdb_link,num_user_for_reviews,
         language,country,content_rating,budget,title_year,actor_2_facebook_likes,
         imdb_score,aspect_ratio,movie_facebook_likes.
-    Most of these attribute are 
+    Most of these attribute are not relevant. We will only include the following attributes in our analysis, 
+    which are related to popularity and resources spent on the movie:
+        movie_facebook_likes, cast_total_facebook_likes,
+        num_user_for_reviews, gross, num_critic_for_reviews, budget, actor_1_facebook_likes, actor_2_facebook_likes
+    and the "movie_imdb_link" column to connect the dataset with our previous data.
+nUser_reviews_name = ""
+gross_name = ""
+nCritic_reviews_name = ""
+budget_name = "budget"
+cast_pop_1 = ""
+cast_pop_2 = ""
+movie_link_name = ""
+    
     
     
 """

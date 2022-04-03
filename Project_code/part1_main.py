@@ -17,7 +17,7 @@ def write_filtered_movie_data_to_file():
     ds = dg.DataSet(rating_path)
     print(len(ds.data_map))
 
-    dg.ratings_filter(ds, min_n_votes=1000)
+    dg.num_ratings_filter(ds, min_n_votes=1000)
     print(len(ds.data_map))
 
     basics_path = dataset_path_n_parents + "datasets/title.basics.tsv/data.tsv"
@@ -38,7 +38,7 @@ def write_filtered_tvseries_data_to_file():
     ds = dg.DataSet(rating_path)
     print(len(ds.data_map))
 
-    dg.ratings_filter(ds,min_n_votes=1000)
+    dg.num_ratings_filter(ds, min_n_votes=1000)
     print(len(ds.data_map))
 
     basics_path = dataset_path_n_parents + "datasets/title.basics.tsv/data.tsv"
