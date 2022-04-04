@@ -11,25 +11,33 @@ def data_loading(df: pd.DataFrame, data_source):
     attr_to_X_col_idx = {}
     X_cols = []
 
+    tv_attrs = [runtime_name, startYear_name, endYear_name, durationYears_name,
+                     nEpisodes_name, averageRating_name, numVotes_name]
+    movie_attrs = [runtime_name, startYear_name, averageRating_name, numVotes_name] # tconst_name
+    meta_attrs = [movie_popularity_name, cast_popularity_name, nUser_reviews_name,
+                     gross_name, nCritic_reviews_name, budget_name]
     if data_source == "df_series":
         # adding the columns with same structure:
-        for attr in [runtime_name, startYear_name, endYear_name, durationYears_name,
-                     nEpisodes_name, averageRating_name, numVotes_name]:
+        for attr in tv_attrs:
             attr_to_X_col_idx[attr] = len(X_cols)
             col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=str)
             X_cols.append(col_data)
 
     elif data_source == "df_movies":
         # adding the columns with same structure:
-        for attr in [runtime_name, startYear_name, averageRating_name, numVotes_name,
-                     tconst_name]:
+        for attr in movie_attrs:
             attr_to_X_col_idx[attr] = len(X_cols)
             col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=str)
             X_cols.append(col_data)
 
     elif data_source == "df_movies_extra":
-        for attr in [movie_popularity_name, cast_popularity_name, nUser_reviews_name,
-                     gross_name, nCritic_reviews_name, budget_name, movie_link_name]:
+        for attr in meta_attrs:
+            attr_to_X_col_idx[attr] = len(X_cols)
+            col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=str)
+            X_cols.append(col_data)
+
+    elif data_source == "df_movies_and_extra":
+        for attr in (movie_attrs + meta_attrs):
             attr_to_X_col_idx[attr] = len(X_cols)
             col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=str)
             X_cols.append(col_data)

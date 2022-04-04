@@ -178,7 +178,6 @@ def extend_by_file_and_tconst(dataset: DataSet, ds_extension_filepath: str, want
             line = line.strip()
             split_line = line.split("\t")
 
-            # TODO: use attr_to_col_idx[tconst_name] here instead.
             tconst = split_line[ext_file_attribute_names.index(tconst_name)]
             # only extend the attributes of titles already present in the dataset:
             if tconst in dataset.data_map.keys():
@@ -274,7 +273,7 @@ def num_ratings_filter(dataset: DataSet, min_n_votes):
 
 
 def missing_data_filter(dataset: DataSet):
-    """ removes rows which are missing any data, meaning the column holds an "\N" value """
+    """ removes rows which are missing any data, meaning the column holds an '\\N' value """
     filtered_dataset = {}
     for tconst, row in dataset.data_map.items():
         row_data = row.value_map.values()
@@ -324,43 +323,47 @@ def runtime_filter(dataset: DataSet):
     which are related to popularity and resources spent on the movie:
         movie_facebook_likes, cast_total_facebook_likes,
         num_user_for_reviews, gross, num_critic_for_reviews, budget, actor_1_facebook_likes, actor_2_facebook_likes
-    and the "movie_imdb_link" column to connect the dataset with our previous data.
-nUser_reviews_name = ""
-gross_name = ""
-nCritic_reviews_name = ""
-budget_name = "budget"
-cast_pop_1 = ""
-cast_pop_2 = ""
-movie_link_name = ""
-    
-    
-    
+    and the "movie_imdb_link" column to unify the dataset with our previous movie data.  
 """
 
 
-def extend_by_metadatafile(dataset: DataSet, ds_extension_filepath: str, wanted_attributes: [str]):
-    with open(ds_extension_filepath, "r", encoding="utf-8") as ext_f:
-        ext_file_attribute_names = ext_f.readline().strip().split(",")
+def extend_by_metadata_file(dataset: DataSet, metadata_filepath: str, wanted_attributes: [str]):
+    with open(metadata_filepath, "r", encoding="utf-8") as ext_f:
+        col_sep = ","  # a comma separates each column
+        ext_file_attribute_names = ext_f.readline().strip().split(col_sep)
         attr_to_col_idx = {}
         for att in wanted_attributes:
             col_idx = ext_file_attribute_names.index(att)
             attr_to_col_idx[att] = col_idx
         dataset.attributes += wanted_attributes
+        print(f"!!!!! {attr_to_col_idx = }!!!!!!")
+        print(f"!!!!! {ext_file_attribute_names = }!!!!!!")
 
+        metadata_tconst_list = []  # Will contain the tconst of all the titles that are covered by the metadata set.
         while True:
             # read the line and format it to be useful
             line = ext_f.readline()
             if not line:
                 break
             line = line.strip()
-            split_line = line.split("\t")
+            split_line = line.split(col_sep)
 
-            # TODO: use attr_to_col_idx[tconst_name] here instead.
-            tconst = split_line[ext_file_attribute_names.index(tconst_name)]
+            imdb_link = split_line[ext_file_attribute_names.index(movie_link_name)]
+            """ the imdb link is of the form "http://www.imdb.com/title/tt#######/?ref_=fn_tt_tt_1", where
+                each # represents a digit. Meaning we can extract the tconst as the 9 characters after "http://www.imdb.com/title/"
+            """
+            tconst = imdb_link[26:35]
             # only extend the attributes of titles already present in the dataset:
-            if tconst in dataset.data_map.keys():
+            try:
                 row = dataset.data_map[tconst]
-
-                for (att) in wanted_attributes:
-                    col_idx = ext_file_attribute_names.index(att)
-                    row.value_map[att] = split_line[col_idx]
+                metadata_tconst_list.append(tconst)
+            except KeyError as e:
+                # case of the tconst not being in our pre existing dataset.
+                continue
+            for (att) in wanted_attributes:
+                col_idx = attr_to_col_idx[att]
+                row.value_map[att] = split_line[col_idx]
+        new_datamap = {}
+        for tconst in metadata_tconst_list:
+            new_datamap[tconst] = dataset.data_map[tconst]
+        dataset.data_map = new_datamap

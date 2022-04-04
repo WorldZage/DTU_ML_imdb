@@ -5,30 +5,81 @@
 import pandas as pd
 import numpy as np
 import summary_statistics as su
-import dataloading_part2 as dl
+import data_generator as dg
+import dataloading_part2 as dl2
 from constants import *
+
+
 # import apply_ex5
 
 
-# Press the green button in the gutter to run the script.
+def write_filtered_and_movie_metadata_to_file():
+    dataset_path_n_parents = "../../../"
+    # dg.count_valid_rows()
+    rating_path = dataset_path_n_parents + "datasets/title.ratings.tsv/data.tsv"
+    ds = dg.DataSet(rating_path)
+    print(len(ds.data_map))
+
+    dg.num_ratings_filter(ds, min_n_votes=1000)
+    print(len(ds.data_map))
+
+    basics_path = dataset_path_n_parents + "datasets/title.basics.tsv/data.tsv"
+    dg.extend_by_file_and_tconst(ds, basics_path, [titleType_name, genres_name, startYear_name, runtime_name])
+    dg.title_type_filter(ds, only_title_type="movie")
+    print(len(ds.data_map))
+
+    # Extending by the movie metadata file
+    metadata_path = dataset_path_n_parents + "datasets/movie_metadata.csv"
+    metadata_attrs = [movie_popularity_name, cast_popularity_name, nUser_reviews_name, gross_name,
+                      nCritic_reviews_name, budget_name, cast_pop_1, cast_pop_2]
+    dg.extend_by_metadata_file(ds, metadata_path, metadata_attrs)
+    print(f"{ds.attributes = }")
+    before_missing_filter = len(ds.data_map)
+
+    dg.missing_data_filter(ds)
+    after_missing_filter = len(ds.data_map)
+    diff_n_rows = before_missing_filter - after_missing_filter
+    print(f"{before_missing_filter = }, {after_missing_filter = }\n {diff_n_rows = }")
+
+    desired_attributes = [tconst_name, titleType_name, genres_name, runtime_name, startYear_name,
+                          averageRating_name, numVotes_name] + metadata_attrs
+    ds.write_to_file("collected_movie_data.csv", desired_attributes)
+
+
 if __name__ == '__main__':
 
     """ Movie data part:"""
-    # write_filtered_movie_data_to_file()
+    # write_filtered_and_movie_metadata_to_file()
     df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
-    # summ_stats = su.calculate_summary_stats(df_movies, ["runtimeMinutes", "startYear", "averageRating", "numVotes"])
-    # for attr in summ_stats:
-    #    print(attr)
+    data, col_idx_dict = dl2.data_loading(df_movies, "df_movies_and_extra")
+    data = np.array(data, dtype=float)
 
 
-    df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
-    X, col_idx_dict = dl.data_loading(df_movies, "df_movies")
+    # Extract the X and y data
+    y = data[col_idx_dict[averageRating_name]]
+    X1 = data[:col_idx_dict[averageRating_name]]
+    X2 = data[col_idx_dict[averageRating_name]+1:]
+    X = np.vstack(X1,X2)
+
+    # Get the dimensions of the data
+    N, M = X.shape
+
+    # Transform the data to be centered:
+    X_center = X - np.ones((N, 1)) * X.mean(axis=0)
+    # Transform the data to be normalized
+    X_norm = X_center * (1 / np.std(X_center, axis=0))
+
+    cor_mat = np.corrcoef(X.T).round(3)
+    print(f"{col_idx_dict}")
+    print(cor_mat)
+    """df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
+    X, col_idx_dict = dl2.data_loading(df_movies, "df_movies")
     X_df1 = X
     attr_dict_df1 = col_idx_dict
 
     df_movies_extra = pd.read_csv("movie_metadata.csv", sep=",", dtype=str)
 
-    X, col_idx_dict = dl.data_loading(df_movies_extra, "df_movies_extra")
+    X, col_idx_dict = dl2.data_loading(df_movies_extra, "df_movies_extra")
     X_df2 = X
     attr_dict_df2 = col_idx_dict
 
@@ -69,6 +120,4 @@ if __name__ == '__main__':
     # take out 1-startYear; 4-movie_facebook_likes; 9-budget
     X = np.delete(X, [1, 4, 8], 1)
     # apply_ex5.linear_regression(y, X)
-
-
-
+    """

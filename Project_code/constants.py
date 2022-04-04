@@ -1,6 +1,8 @@
 # this script is to store the variables which will be used across the project, in order to avoid typos.
 
 """ --- Assignment 1 constants --- """
+titleType_name = "titleType"
+isAdult_name = "isAdult"
 runtime_name = "runtimeMinutes"
 startYear_name = "startYear"
 endYear_name = "endYear"
