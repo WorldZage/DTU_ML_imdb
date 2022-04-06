@@ -9,8 +9,8 @@ import data_generator as dg
 import dataloading_part2 as dl2
 from constants import *
 
-
 # import apply_ex5
+from cross_validation import cross_validate_lambda, cross_validate_feature
 
 
 def write_filtered_and_movie_metadata_to_file():
@@ -46,78 +46,61 @@ def write_filtered_and_movie_metadata_to_file():
     ds.write_to_file("collected_movie_data.csv", desired_attributes)
 
 
+def regression_a(df: pd.DataFrame):
+    data, col_idx_dict = dl2.data_loading(df, "df_movies_and_extra")
+    data = np.array(data, dtype=float)
+
+    cor_mat = np.corrcoef(data.T).round(3)
+    print(f"{col_idx_dict}")
+    # print(cor_mat)
+
+    # Extract the X and y data
+    y_col_idx = col_idx_dict[averageRating_name]
+    y = data[:, y_col_idx]
+    X = np.delete(data, y_col_idx, 1)
+    feature_names = [''] * len(col_idx_dict)
+
+    # Data pre processing
+    for name, idx in col_idx_dict.items():
+        feature_names[idx] = name
+    # Remove the y column's name from the feature names:
+    del feature_names[feature_names.index(averageRating_name)]
+    # it's difficult to imagine a linear relation between starting year, and movie rate.
+    # Some periods of time might have higher rated movies than others.
+    # Overall we might see an average tendency to decrease or increase in rating, but it won't help us with predictions.
+    # So we remove it from our dataset.
+    startYear_idx = col_idx_dict[startYear_name]
+    X = np.delete(X, startYear_idx, 1)
+    del feature_names[feature_names.index(startYear_name)]
+
+    # Some features are spread across a large scale values.
+    # For example, some movies have several thousand likes, while others only have tens.
+    # to make them comparable, we use logarithmic transformation on popularity features
+    # (but we will have to remove rows that contain 0 in any of these attributes)
+    for name in [numVotes_name, movie_popularity_name, cast_popularity_name, nUser_reviews_name, nCritic_reviews_name]:
+        idx = feature_names.index(name)
+
+
+        # X[idx] = np.log(X[idx])
+
+    # Get the dimensions of the data
+    N, M = X.shape
+    print(f"{N = }, {M = }")
+    # Transform the data to be centered:
+    X_center = X - np.ones((N, 1)) * X.mean(axis=0)
+    # Transform the data to be normalized
+    X_norm = X_center * (1 / np.std(X_center, axis=0))
+    # print(f"{X_norm[0:3, :]}")
+
+
+    lambdas = np.array([10 ** -5, 10 ** -3, 10 ** -1, 10 ** 0, 10 ** 1, 10 ** 2, 10 ** 3, 10 ** 4])
+    # cross_validate_lambda(X_norm, y, 10, feature_names, lambdas)
+    # cross_validate_feature(X_norm, y, 10, feature_names)
+
 if __name__ == '__main__':
 
     """ Movie data part:"""
     # write_filtered_and_movie_metadata_to_file()
     df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
-    data, col_idx_dict = dl2.data_loading(df_movies, "df_movies_and_extra")
-    data = np.array(data, dtype=float)
+    regression_a(df_movies)
 
-
-    # Extract the X and y data
-    y = data[col_idx_dict[averageRating_name]]
-    X1 = data[:col_idx_dict[averageRating_name]]
-    X2 = data[col_idx_dict[averageRating_name]+1:]
-    X = np.vstack(X1,X2)
-
-    # Get the dimensions of the data
-    N, M = X.shape
-
-    # Transform the data to be centered:
-    X_center = X - np.ones((N, 1)) * X.mean(axis=0)
-    # Transform the data to be normalized
-    X_norm = X_center * (1 / np.std(X_center, axis=0))
-
-    cor_mat = np.corrcoef(X.T).round(3)
-    print(f"{col_idx_dict}")
-    print(cor_mat)
-    """df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
-    X, col_idx_dict = dl2.data_loading(df_movies, "df_movies")
-    X_df1 = X
-    attr_dict_df1 = col_idx_dict
-
-    df_movies_extra = pd.read_csv("movie_metadata.csv", sep=",", dtype=str)
-
-    X, col_idx_dict = dl2.data_loading(df_movies_extra, "df_movies_extra")
-    X_df2 = X
-    attr_dict_df2 = col_idx_dict
-
-    X_conc = np.array(0)
-    for idx1 in range(len(X_df1)):
-        movie_id = X_df1[idx1, attr_dict_df1[tconst_name]]
-        for idx2 in range(len(X_df2)):
-            movie_link = X_df2[idx2, attr_dict_df2[movie_link_name]]
-            if movie_id in movie_link:
-                X_conc = np.append(X_conc, X_df1[idx1, :])
-                X_conc = np.append(X_conc, X_df2[idx2, :])
-
-    nrows1, ncols1 = X_df1.shape
-    nrows2, ncols2 = X_df2.shape
-
-    X_conc = np.delete(X_conc, 0)
-    X_conc = X_conc.reshape(int(len(X_conc) / (ncols1 + ncols2)), ncols1 + ncols2)
-
-    X_conc = np.delete(X_conc, [attr_dict_df1[tconst_name], attr_dict_df2[movie_link_name] + ncols1], 1)
-
-    # force to be float
-    X_conc = np.array(X_conc, dtype=float)
-
-    # normalize
-    X_norm = X_conc * (1 / np.std(X_conc, axis=0))
-    cov_mat = np.cov(X_norm.T).round(3)
-    print(f"cov.mat: {cov_mat}")
-
-    attr_dict_conc = np.concatenate((list(attr_dict_df1.keys()), list(attr_dict_df2.keys())))
-    # attr_cov = np.delete(attr_dict_conc, [attr_dict_df1[tconst],attr_dict_df2[movie_link_name]+ncols1], 0)
-    # attr_cov = attr_cov.T
-
-    X_highrates = np.delete(X_conc, np.where(X_conc[:, 2] < 7)[0], axis=0)
-
-    X = np.delete(X_highrates, [attr_dict_df1[averageRating_name]], 1)
-    y = X_highrates[:, attr_dict_df1[averageRating_name]]
-
-    # take out 1-startYear; 4-movie_facebook_likes; 9-budget
-    X = np.delete(X, [1, 4, 8], 1)
-    # apply_ex5.linear_regression(y, X)
-    """
