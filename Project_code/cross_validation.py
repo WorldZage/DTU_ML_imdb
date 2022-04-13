@@ -138,6 +138,10 @@ def cross_validate_feature(X, y, K, attributeNames):
 def cross_validate_lambda(X, y, K, attributeNames, lambdas=np.power(10., range(-5, 9))):
     N, M = X.shape
 
+    # Add offset attribute
+    X = np.concatenate((np.ones((X.shape[0], 1)), X), 1)
+    attributeNames = [u'Offset'] + attributeNames
+    M = M + 1
     ## Crossvalidation
     # Create crossvalidation partition for evaluation
     CV = model_selection.KFold(K, shuffle=True)
