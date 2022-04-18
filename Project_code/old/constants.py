@@ -1,8 +1,5 @@
 # this script is to store the variables which will be used across the project, in order to avoid typos.
 
-""" --- Assignment 1 constants --- """
-titleType_name = "titleType"
-isAdult_name = "isAdult"
 runtime_name = "runtimeMinutes"
 startYear_name = "startYear"
 endYear_name = "endYear"
@@ -11,10 +8,8 @@ nEpisodes_name = "nEpisodes"
 averageRating_name = "averageRating"
 numVotes_name = "numVotes"
 genres_name = "genres"
-tconst_name = "tconst"
+tconst = "tconst"
 
-
-""" --- Assignment 2 constants --- """
 movie_popularity_name = "movie_facebook_likes"
 cast_popularity_name = "cast_total_facebook_likes"
 nUser_reviews_name = "num_user_for_reviews"

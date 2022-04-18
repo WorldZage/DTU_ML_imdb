@@ -79,8 +79,7 @@ def data_loading(df: pd.DataFrame, data_source):
 
     elif data_source == "df_movies":
         # adding the columns with same structure:
-        for attr in [runtime_name, startYear_name, averageRating_name, numVotes_name,
-                     tconst]:
+        for attr in [runtime_name, startYear_name, averageRating_name, numVotes_name, tconst]:
             attr_to_X_col_idx[attr] = len(X_cols)
             col_data = np.asarray(df.values[:, col_names.index(attr)],dtype=str)
             X_cols.append(col_data)
@@ -181,7 +180,10 @@ if __name__ == '__main__':
     #force to be float
     X_conc=np.array(X_conc, dtype=float)
     
-    X_highrates = np.delete(X_conc, np.where(X_conc[:,2] < 7)[0], axis=0)
+    # filter data
+    lower_rate = 5
+    #X_highrates = np.delete(X_conc, np.where(X_conc[:,2] < lower_rate)[0], axis=0)
+    #X_highrates = X_conc
     
     #normalize
     X_norm = X_conc * (1/np.std(X_conc,axis=0))
@@ -189,17 +191,30 @@ if __name__ == '__main__':
     print(f"cov.mat: {cov_mat}")
     
     attr_dict_conc = np.concatenate((list(attr_dict_df1.keys()), list(attr_dict_df2.keys())))
-    # attr_cov = np.delete(attr_dict_conc, [attr_dict_df1[tconst],attr_dict_df2[movie_link_name]+ncols1], 0)
+    attr_dict_r = np.delete(attr_dict_conc,[4,11], 0)
+    #attr_cov = np.delete(attr_dict_conc, [attr_dict_0df1[tconst],attr_dict_df2[movie_link_name]+ncols1], 0)
     # attr_cov = attr_cov.T
     
 
-                                
-    X = np.delete(X_highrates, [attr_dict_df1[numVotes_name]], 1)
-    y = X_highrates[:,attr_dict_df1[numVotes_name]]
+    X = np.delete(X_conc, [attr_dict_df1[averageRating_name]], 1)
+    y = X_conc[:,attr_dict_df1[averageRating_name]]
     
     #take out 1-startYear; 4-movie_facebook_likes; 9-budget
     X = np.delete(X, [1,4,8], 1)
     apply_ex5.linear_regression(y, X)
+    
+    #
+    rate_class_limit = 7.5
+    y_bool = y.copy();
+    for i in range(len(y)):
+        if y[i] > rate_class_limit:
+            y_bool[i]=1;
+        else:
+            y_bool[i]=0;
+            
+    
+    apply_ex5.logistic_regression(y_bool, X, str(rate_class_limit))
+    
 
     
     

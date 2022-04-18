@@ -1,0 +1,53 @@
+import pandas as pd
+import numpy as np
+from constants import *
+
+def data_loading(df: pd.DataFrame, data_source):
+    col_names = list(df.columns)
+
+    # create the X data
+    n_rows = len(df.values[:, 0])
+    # X_col_names = [attr_name for attr_name in col_names if attr_name != y_attr_name]
+    attr_to_X_col_idx = {}
+    attr_to_X_col_idx_arr = []
+    X_cols = []
+
+    tv_attrs = [runtime_name, startYear_name, endYear_name, durationYears_name,
+                     nEpisodes_name, averageRating_name, numVotes_name]
+    movie_attrs = [runtime_name, startYear_name, averageRating_name, numVotes_name] # tconst_name
+    meta_attrs = [movie_popularity_name, cast_popularity_name, nUser_reviews_name,
+                     gross_name, nCritic_reviews_name, budget_name]
+    if data_source == "df_series":
+        # adding the columns with same structure:
+        for attr in tv_attrs:
+            attr_to_X_col_idx[attr] = len(X_cols)
+            col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=str)
+            X_cols.append(col_data)
+        attr_to_X_col_idx_arr = tv_attrs
+
+    elif data_source == "df_movies":
+        # adding the columns with same structure:
+        for attr in movie_attrs:
+            attr_to_X_col_idx[attr] = len(X_cols)
+            col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=str)
+            X_cols.append(col_data)
+        attr_to_X_col_idx_arr = movie_attrs
+
+    elif data_source == "df_movies_extra":
+        for attr in meta_attrs:
+            attr_to_X_col_idx[attr] = len(X_cols)
+            col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=str)
+            X_cols.append(col_data)
+        attr_to_X_col_idx_arr = meta_attrs
+
+    elif data_source == "df_movies_and_extra":
+        for attr in (movie_attrs + meta_attrs):
+            attr_to_X_col_idx[attr] = len(X_cols)
+            col_data = np.asarray(df.values[:, col_names.index(attr)], dtype=str)
+            X_cols.append(col_data)
+        attr_to_X_col_idx_arr = movie_attrs + meta_attrs
+
+    X = np.vstack(X_cols).T
+    X = np.delete(X, np.where(X == "nan")[0], axis=0)
+
+    return X, attr_to_X_col_idx, attr_to_X_col_idx_arr

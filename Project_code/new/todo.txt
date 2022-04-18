@@ -1,0 +1,6 @@
+should we keep the rows with low numVotes? how do we decide the boundary
+ - should we choose a somewhat high value, to only look at popular movies?
+ - summary statistics : compute quantiles [q1, q3, q5] instead of min, median, max. DONE
+do the function for calculating duration of shows
+do the function for adding number of episodes for shows, by traversing the episode file.
+do separate summary statistics for shows.
