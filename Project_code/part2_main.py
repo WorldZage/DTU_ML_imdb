@@ -2,9 +2,12 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from pprint import pprint
+
 import pandas as pd
 import numpy as np
 from matplotlib.pyplot import plot, show, title, figure, subplot, xlabel, ylabel, subplots_adjust, subplots, ylim
+from scipy.stats import stats
 
 import summary_statistics as su
 import data_generator as dg
@@ -12,7 +15,8 @@ import dataloading_part2 as dl2
 from constants import *
 
 # import apply_ex5
-from cross_validation import cross_validate_lambda, cross_validate_feature
+from cross_validation import cross_validate_lambda, cross_validate_feature, cross_validate_ann, \
+    optimal_hidden_unit_ann, cross_validate_model_comparison, statistic_comparison, plot_models
 
 
 def write_filtered_and_movie_metadata_to_file():
@@ -52,10 +56,11 @@ def regression_a(df: pd.DataFrame):
     data, col_idx_dict = dl2.data_loading(df, "df_movies_and_extra")
     data = np.array(data, dtype=float)
 
-    cor_mat = np.corrcoef(data.T).round(3)
-    print(f"{col_idx_dict}")
-    print(cor_mat[:, 2])
-
+    show_correlations = False
+    if show_correlations:
+        cor_mat = np.corrcoef(data.T).round(3)
+        print(f"{col_idx_dict}")
+        print(cor_mat[:, 2])
 
     # Extract the X and y data
     y_col_idx = col_idx_dict[averageRating_name]
@@ -70,31 +75,34 @@ def regression_a(df: pd.DataFrame):
     del feature_names[feature_names.index(averageRating_name)]
 
     startYear_idx = col_idx_dict[startYear_name]
+
     # By advice of TA, we do a (superficial) inspection of the relation between year and average rating:
     def median_rating_per_year_plot():
-        min_startYear = int(np.min(X[:,startYear_idx]))
-        max_startYear = int(np.max(X[:,startYear_idx]))
+        min_startYear = int(np.min(X[:, startYear_idx]))
+        max_startYear = int(np.max(X[:, startYear_idx]))
 
         # a list containing non-duplicates of the year entries
-        years = np.unique(X[:,startYear_idx])
+        years = np.unique(X[:, startYear_idx])
         # empty vector to be filled later
         median_rating_per_year = np.zeros([years.size, 2])
         # Iterate through the set of years, for each year calculate its corresponding median averageRating.
         for idx, year in enumerate(years):
-            median_rating_per_year[idx,0] = year
-            median_rating_per_year[idx,1] = np.median([y[X[:, startYear_idx] == year]])
+            median_rating_per_year[idx, 0] = year
+            median_rating_per_year[idx, 1] = np.median([y[X[:, startYear_idx] == year]])
         fig, (ax1, ax2) = subplots(1, 2, sharey=True)
-        ax1.plot(median_rating_per_year[:,0],median_rating_per_year[:,1], '+')
+        ax1.plot(median_rating_per_year[:, 0], median_rating_per_year[:, 1], '+')
         fig.supylabel("median rating")
         ax1.title.set_text("The median of 'averageRating' per year, of movies on IMDB")
         fig.supxlabel("Year")
         # plotting a zoomed in version of the data, for years 1996-2016 ( most recent years in the data)
-        last_20_years_data = ((median_rating_per_year[:,0][median_rating_per_year[:,0] > max_startYear - 20].round(0)),
-                              median_rating_per_year[:,1][median_rating_per_year[:,0] > max_startYear - 20])
-        ax2.plot(last_20_years_data[0],last_20_years_data[1], '+',color="red")
+        last_20_years_data = (
+            (median_rating_per_year[:, 0][median_rating_per_year[:, 0] > max_startYear - 20].round(0)),
+            median_rating_per_year[:, 1][median_rating_per_year[:, 0] > max_startYear - 20])
+        ax2.plot(last_20_years_data[0], last_20_years_data[1], '+', color="red")
         ax2.title.set_text("The median of 'averageRating' per year, of movies on IMDB, in the last 25 years.")
-        ylim(0,10)
+        ylim(0, 10)
         show()
+
     # median_rating_per_year_plot()
 
     # it's difficult to imagine a linear relation between starting year, and movie rate.
@@ -105,13 +113,14 @@ def regression_a(df: pd.DataFrame):
     X = np.delete(X, startYear_idx, 1)
     del feature_names[feature_names.index(startYear_name)]
 
-    # Some features are spread across a large scale values.
+    # Some features are spread across a large scale of values.
     # For example, some movies have several thousand likes, while others only have tens.
     # to make them comparable, we use logarithmic transformation on popularity features
     # (but we will have to remove rows that contain 0 in any of these attributes)
+    log_features = [numVotes_name, movie_popularity_name, cast_popularity_name, nUser_reviews_name,
+                    nCritic_reviews_name]
     log_feature_idcs = [feature_names.index(name) for name in
-                        [numVotes_name, movie_popularity_name, cast_popularity_name, nUser_reviews_name,
-                         nCritic_reviews_name]]
+                        log_features]
     # Removing the rows containing 0, from both X and y data:
     X_no_0 = X[(X[:, log_feature_idcs] > 0.00).all(axis=1)]
     y_no_0 = y[(X[:, log_feature_idcs] > 0.00).all(axis=1)]
@@ -119,42 +128,81 @@ def regression_a(df: pd.DataFrame):
     # Logarithmic transformation
     X_log = X_no_0
     X_log[:, log_feature_idcs] = np.log(X_no_0[:, log_feature_idcs])
+    # Change the name of the transformed features:
+    feature_names = ["log({})".format(name) if name in log_features else name
+                     for name in feature_names]
 
-    # check new correlations
-    # stacking the y data and x data together
-    cor_data = np.hstack((np.array([y_no_0]).T, X_log))
-    cor_mat = np.corrcoef(cor_data.T).round(3)
-    print(f"NEW correlation matrix:\n{cor_mat[:, 0]}")
-    print(f"{[averageRating_name] + feature_names}")
+    if show_correlations:
+        # check new correlations
+        # stacking the y data and x data together
+        cor_data = np.hstack((np.array([y_no_0]).T, X_log))
+        cor_mat = np.corrcoef(cor_data.T).round(3)
+        print(f"NEW correlation matrix:\n{cor_mat[:, 0]}")
+        print(f"{[averageRating_name] + feature_names}")
 
     # Get the dimensions of the data
     N, M = X_log.shape
-    print(f"{N = }, {M = }")
 
     # Transform the data to be centered:
     X_center = X_log - np.ones((N, 1)) * X_log.mean(axis=0)
     # Transform the data to be normalized
     X_norm = X_center * (1 / np.std(X_center, axis=0))
-    # print(f"{X_norm[0:3, :]}")
+
+    show_mean_and_std = True
+    if show_mean_and_std:
+        print(f"MEANS: {X_log.mean(axis=0).round(2)}\n"
+              f"St.D's: {(np.std(X_center, axis=0).round(2))}\n"
+              f"FEATURES: {list(enumerate(feature_names))})")
 
     # Feature selection:
-    # cross_validate_feature(X_norm, y_no_0, 10, feature_names)
+    if False:  # Change to True if you want to do the feature selection again.
+        cross_validate_feature(X_norm, y_no_0, 10, feature_names)
     # Based off the results, we will now remove "budget", "gross" and "num_critic_for_reviews" from the features:
     removed_feature_idcs = [feature_names.index(budget_name),
                             feature_names.index(gross_name),
-                            feature_names.index(nCritic_reviews_name)]
+                            feature_names.index("log({})".format(nCritic_reviews_name))]
     X_feat_selected = np.delete(X_norm, [removed_feature_idcs], 1)
     for idx in sorted(removed_feature_idcs)[::-1]:
         # traverse backwards to avoid the problem of deleting from an array that is being iterated through
         del feature_names[idx]
     print(f"{feature_names = }, {X_feat_selected.shape = }")
-    lambdas = np.power(10.,np.arange(-5,5,1))
-    #np.array([10 ** -5, 10 ** -3, 10 ** -1, 10 ** 0, 10 ** 1, 10 ** 2, 10 ** 3, 10 ** 4])
+    lambdas = np.power(10., np.arange(-5, 4, 1))
+
+    # np.array([10 ** -5, 10 ** -3, 10 ** -1, 10 ** 0, 10 ** 1, 10 ** 2, 10 ** 3, 10 ** 4])
     # cross_validate_lambda(X_feat_selected, y_no_0, 10, feature_names, lambdas)
+    return X_feat_selected, y_no_0, feature_names
+
+
+def regression_b(X, y, feature_names):
+    do_pca_preprocessing = False
+    if do_pca_preprocessing:
+        Y = stats.zscore(X, 0)
+        U, S, V = np.linalg.svd(Y, full_matrices=False)
+        V = V.T
+        # Components to be included as features
+        k_pca = 3
+        X = X @ V[:, :k_pca]
+        N, M = X.shape
+        feature_names = ["PC {}".format(i) for i in range(3)]
+    # cross_validate_ann(X, y, 5, feature_names)
+    lambdas = np.power(10., np.arange(-5, 4, 1))
+    hidden_unit_options = [1, 20]
+    # [5, 10, 20, 30] <-- Actual options used in the report
+    """
+    xt = np.array([np.random.random_integers(0,20,10),np.random.random_integers(10,40,10)])
+    yt = np.array(np.random.random_integers(100,110,10))
+    """
+    K = 5
+    # print(optimal_hidden_unit_ann(X, y, hidden_unit_options, cvf=5))
+    # model_comparison_dict = (cross_validate_model_comparison(X, y, lambdas, hidden_unit_options, K=K))
+    # statistic_comparison(X, y, 20, 1, K=2)
+    plot_models(X,y,1,20,K=3)
 
 
 if __name__ == '__main__':
     """ Movie data part:"""
     # write_filtered_and_movie_metadata_to_file()
     df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
-    regression_a(df_movies)
+    X, y, feats = regression_a(df_movies)
+
+    regression_b(X, y, feats)
