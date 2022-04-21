@@ -36,7 +36,7 @@ def compare_models(X,y):
     plt.rcParams.update({'font.size': font_size})
     
     # k-fold crossvalidaton
-    K = 5
+    K = 10
     CV = model_selection.KFold(K, shuffle=True)    
     
     k = 0
@@ -68,7 +68,7 @@ def compare_models(X,y):
         sigma = np.empty((K_in, M-1))
         
         # init LOGISTIC REGRESSION
-        lambda_interval = np.logspace(-10, 3, 100)
+        lambda_interval = np.logspace(-10, 3, 20)
         Error_train_logr = np.empty((len(lambda_interval),K_in))
         Error_test_logr = np.empty((len(lambda_interval),K_in))
         
@@ -190,10 +190,27 @@ def compare_models(X,y):
         y_est_test_logr = mdl.predict(X_test).T
         
         test_error_rate_logr = np.sum(y_est_test_logr != y_test) / len(y_test)
+        w_est = mdl.coef_[0]
         
         print("\nLogistic Regression:")
         print("Optimal Lambda:", opt_lambda)
         print("Logistic Regression Error:",test_error_rate_logr*100, "%")
+        print("coefficients", w_est)
+        
+            # NO REGULARIZATION
+            
+        mdl_noreg = LogisticRegression(penalty='l2')
+        
+        mdl_noreg.fit(X_train, y_train)
+        y_est_test_logr_noreg = mdl_noreg.predict(X_test).T
+        
+        test_error_rate_logr_noreg = np.sum(y_est_test_logr_noreg != y_test) / len(y_test)
+        
+        w_est_noreg = mdl.coef_[0]
+        
+        print("\nLogistic Regression No regularization:")
+        print("Logistic Regression Error:",test_error_rate_logr_noreg*100, "%")
+        print("coefficients", w_est_noreg)
         
         
         # DECISION TREES
@@ -212,7 +229,7 @@ def compare_models(X,y):
         
         # BASELINE
         
-        y_est_test_bas = np.full(len(y_test), round(y_test.mean()) ) # ones
+        y_est_test_bas = np.full(len(y_test), round(y_train.mean()) ) # ones
         # Evaluate misclassification rate over train/test data (in this CV fold)
         test_error_rate_bas = np.sum(y_est_test_bas != y_test) / float(len(y_est_test))
         

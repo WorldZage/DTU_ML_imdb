@@ -109,32 +109,56 @@ def regression_a(data, col_idx_dict):
     
 
 def classification_models(data, col_idx_dict):
-
+    
+    N, M = data.shape
+    
     # Extract the X and y data
     y_col_idx = col_idx_dict[averageRating_name]
-    y = data[:, y_col_idx]
+    
+    # order descending considering average rating
+    
+    data_ordered = data[data[:, y_col_idx].argsort()[::-1]]
+    
+    # BALANCE DATA
+    rate_class_limit = 7.5
+    count_highrated = np.count_nonzero(data[:,y_col_idx] >= rate_class_limit)
+    print(count_highrated)
+
+    data_highrated =  data_ordered[:count_highrated, :]
+    data_lowrated = data_ordered[count_highrated:, :]
+    
+    np.random.shuffle(data_lowrated)
+    
+    limit_sample = count_highrated
+    print(limit_sample)
+    data_lowrated_sample = np.empty((limit_sample,M))
+    for i in range(limit_sample):
+        data_lowrated_sample[i,:] = data_lowrated[i, :]
+    
+    data_filt = np.concatenate((data_highrated, data_lowrated_sample), axis=0)
+    
+    np.random.shuffle(data_filt)
 
     # remove y + uncorrelated attirbutes from data
-    X = np.delete(data, [y_col_idx, 
+    X = np.delete(data_filt, [y_col_idx, 
                          col_idx_dict[startYear_name], 
                          col_idx_dict[cast_popularity_name], 
                          col_idx_dict[budget_name],
                          col_idx_dict["gross"]
-                         ], 1)
-    
-    rate_class_limit = 7.5
+                         ], 1)       
+
+    y = data_filt[:, y_col_idx]
     y_binary = y.copy();
     for i in range(len(y)):
         if y[i] > rate_class_limit:
-            y_binary[i]=0;
+            y_binary[i]=0
         else:
-            y_binary[i]=1;
-
-    
+            y_binary[i]=1
+        
     compare_models(X, y_binary)
     
     
-    return X, y_binary
+    return X, y_binary, data_filt
     
 
 if __name__ == '__main__':
@@ -157,5 +181,5 @@ if __name__ == '__main__':
     #regression_a(data, col_idx_dict)
     
     # investigate logistic regression
-    X,y = classification_models(data, col_idx_dict)
+    X,y,data_filt = classification_models(data, col_idx_dict)
 
