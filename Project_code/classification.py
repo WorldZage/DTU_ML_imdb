@@ -29,10 +29,38 @@ import data_generator as dg
 import dataloading_part2 as dl2
 from constants import *
 
+def logistic_reg(X, y, rate_class_limit):
+    # LOG REG MODEL ######
+    
+    font_size = 7
+    plt.rcParams.update({'font.size': font_size})
+    
+    model = lm.LogisticRegression()
+    model = model.fit(X,y)
+
+    # Classify movies as High/Low rated (0/1) and assess probabilities
+    y_est = model.predict(X)
+    y_est_high_rated_prob = model.predict_proba(X)[:, 0]
+    
+    
+    # plot
+    f = figure();
+    class0_ids = np.nonzero(y==0)[0].tolist()
+    plot(class0_ids, y_est_high_rated_prob[class0_ids], '.y')
+    
+    class1_ids = np.nonzero(y==1)[0].tolist()
+    plot(class1_ids, y_est_high_rated_prob[class1_ids], '.r')
+    
+    xlabel('Data object (movie sample)'); ylabel('Predicted prob. of class >' + str(rate_class_limit) + ' rated');
+    legend(['High Rated >' + str(rate_class_limit), 
+            'Low Rated <'+ str(rate_class_limit)])
+
+    show()
+
 def compare_models(X,y):
     N, M = X.shape
     
-    font_size = 15
+    font_size = 7
     plt.rcParams.update({'font.size': font_size})
     
     # k-fold crossvalidaton
@@ -49,6 +77,11 @@ def compare_models(X,y):
         y_train = y[train_index]
         X_test = X[test_index]
         y_test = y[test_index]
+        
+        y_0 = np.count_nonzero(y_test == 0)
+        print("count y=0", y_0)
+        y_1 = np.count_nonzero(y_test == 1)
+        print("count y=1", y_1)
     
         # Standardize the training and set set based on training set mean and std
         mu = np.mean(X_train, 0)
@@ -68,13 +101,13 @@ def compare_models(X,y):
         sigma = np.empty((K_in, M-1))
         
         # init LOGISTIC REGRESSION
-        lambda_interval = np.logspace(-10, 3, 20)
+        lambda_interval = np.logspace(-10, 5, 30)
         Error_train_logr = np.empty((len(lambda_interval),K_in))
         Error_test_logr = np.empty((len(lambda_interval),K_in))
         
         # init DECISION TREES
         # Tree complexity parameter - constraint on maximum depth
-        tc = np.arange(2, 16, 1)
+        tc = np.arange(2, 40, 1)
         Error_train_dt = np.empty((len(tc),K_in))
         Error_test_dt = np.empty((len(tc),K_in))
             
@@ -115,10 +148,11 @@ def compare_models(X,y):
             # DECISION TREES
             
             for i, t in enumerate(tc):
-                # Fit decision tree classifier, Gini split criterion, different pruning levels
+                # Fit decision tree classifier, split criterion, different pruning levels
                 dtc = tree.DecisionTreeClassifier(criterion='gini', 
                                                   max_depth=t,
-                                                  splitter="best")
+                                                  splitter="best",
+                                                  min_samples_split=5)
                 dtc = dtc.fit(X_train_in,y_train_in.ravel())
                 y_est_test = dtc.predict(X_test_in)
                 y_est_train = dtc.predict(X_train_in)
@@ -159,8 +193,9 @@ def compare_models(X,y):
         
         error_fold = Error_test_dt.mean(1)
         error_fold_lst = error_fold.tolist()
-        opt_test_error = min(error_fold_lst)
-        opt_model_complex = error_fold_lst.index(opt_test_error) +2
+        error_fold_lst_round = [round(num,2) for num in error_fold_lst]
+        opt_test_error = min(error_fold_lst_round)
+        opt_depth = error_fold_lst_round.index(opt_test_error) +2
         
         figure()
         boxplot(Error_test_dt.T)
@@ -168,8 +203,9 @@ def compare_models(X,y):
         ylabel('Test error across CV folds, K={0})'.format(K_in))
         
         figure()
-        plot(tc, Error_train_dt.mean(1))
-        plot(tc, Error_test_dt.mean(1))
+        plot(tc, Error_train_dt.mean(1)*100)
+        plot(tc, Error_test_dt.mean(1)*100)
+        plt.plot(opt_depth, opt_test_error*100, 'o')
         xlabel('Model complexity (max tree depth)')
         ylabel('Error (misclassification rate, CV K={0})'.format(K_in))
         legend(['Error_train','Error_test'])
@@ -215,14 +251,17 @@ def compare_models(X,y):
         
         # DECISION TREES
         
-        dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=opt_model_complex)
+        dtc = tree.DecisionTreeClassifier(criterion='gini', 
+                                          max_depth=opt_depth,
+                                          splitter="best",
+                                          min_samples_split=5)
         dtc = dtc.fit(X_train,y_train.ravel())
         y_est_test_dt = dtc.predict(X_test)
         # Evaluate misclassification rate over train/test data (in this CV fold)
         test_error_rate_dt = np.sum(y_est_test_dt != y_test) / float(len(y_test))
         
         print("\nDecision Trees:")
-        print("Optimal Model Complexity", opt_model_complex)
+        print("Optimal Model Complexity", opt_depth)
         print("Decision Trees Error: ",test_error_rate_dt*100, "%")
         
         

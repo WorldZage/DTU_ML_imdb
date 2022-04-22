@@ -20,7 +20,7 @@ from constants import *
 
 
 from cross_validation import cross_validate_lambda, cross_validate_feature
-from classification import compare_models
+from classification import compare_models, logistic_reg
 
 
 
@@ -127,17 +127,21 @@ def classification_models(data, col_idx_dict):
     data_highrated =  data_ordered[:count_highrated, :]
     data_lowrated = data_ordered[count_highrated:, :]
     
+    print(data.shape)
+    print(data_highrated.shape)
+    print(data_lowrated.shape)
+    
+    # solve undersample of high rated
+    #data_highrated = np.tile(data_highrated,(2,1))
+    
     np.random.shuffle(data_lowrated)
     
-    limit_sample = count_highrated
-    print(limit_sample)
+    limit_sample = len(data_highrated)
     data_lowrated_sample = np.empty((limit_sample,M))
     for i in range(limit_sample):
         data_lowrated_sample[i,:] = data_lowrated[i, :]
     
     data_filt = np.concatenate((data_highrated, data_lowrated_sample), axis=0)
-    
-    np.random.shuffle(data_filt)
 
     # remove y + uncorrelated attirbutes from data
     X = np.delete(data_filt, [y_col_idx, 
@@ -145,19 +149,23 @@ def classification_models(data, col_idx_dict):
                          col_idx_dict[cast_popularity_name], 
                          col_idx_dict[budget_name],
                          col_idx_dict["gross"]
-                         ], 1)       
+                         ], 1)
 
     y = data_filt[:, y_col_idx]
     y_binary = y.copy();
     for i in range(len(y)):
-        if y[i] > rate_class_limit:
+        if y[i] >= rate_class_limit:
             y_binary[i]=0
         else:
             y_binary[i]=1
-        
+    
+    # CLASSIFY
+    logistic_reg(X, y_binary, rate_class_limit)
+    
+    # COMPARY CLASSIFIERS
     compare_models(X, y_binary)
     
-    
+
     return X, y_binary, data_filt
     
 
