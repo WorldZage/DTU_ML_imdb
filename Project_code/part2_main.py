@@ -20,6 +20,8 @@ from toolbox_02450 import windows_graphviz_call
 import summary_statistics as su
 import data_generator as dg
 import dataloading_part2 as dl2
+import dataloading_part2_1 as dl3
+
 from constants import *
 
 # import apply_ex5
@@ -302,7 +304,7 @@ if __name__ == '__main__':
     # regression_b(X, y, feats)
     
     # convert to array
-    data, col_idx_dict, col_idx_arr = dl2.data_loading(df_movies, "df_movies_and_extra")
+    data, col_idx_dict, col_idx_arr = dl3.data_loading(df_movies, "df_movies_and_extra")
     data = np.array(data, dtype=float)
     
     #normalize
