@@ -166,8 +166,8 @@ def regression_a(df: pd.DataFrame):
         # traverse backwards to avoid the problem of deleting from an array that is being iterated through
         del feature_names[idx]
     print(f"{feature_names = }, {X_feat_selected.shape = }")
-    lambdas = np.power(10., np.arange(-5, 4, 1))
-
+    lambdas = np.power(10., np.arange(-15, 4, 2))
+    print(f"{lambdas = }")
     # np.array([10 ** -5, 10 ** -3, 10 ** -1, 10 ** 0, 10 ** 1, 10 ** 2, 10 ** 3, 10 ** 4])
     # cross_validate_lambda(X_feat_selected, y_no_0, 10, feature_names, lambdas)
     return X_feat_selected, y_no_0, feature_names
@@ -185,8 +185,8 @@ def regression_b(X, y, feature_names):
         N, M = X.shape
         feature_names = ["PC {}".format(i) for i in range(3)]
     # cross_validate_ann(X, y, 5, feature_names)
-    lambdas = np.power(10., np.arange(-5, 4, 1))
-    hidden_unit_options = [1, 20]
+    lambdas = np.power(10., np.arange(-3, 3, 1))
+    hidden_unit_options = [16, 18, 20, 22, 24]  # [1, 20]
     # [5, 10, 20, 30] <-- Actual options used in the report
     """
     xt = np.array([np.random.random_integers(0,20,10),np.random.random_integers(10,40,10)])
@@ -194,15 +194,40 @@ def regression_b(X, y, feature_names):
     """
     K = 5
     # print(optimal_hidden_unit_ann(X, y, hidden_unit_options, cvf=5))
-    # model_comparison_dict = (cross_validate_model_comparison(X, y, lambdas, hidden_unit_options, K=K))
-    # statistic_comparison(X, y, 20, 1, K=2)
-    plot_models(X,y,1,20,K=3)
+    if False:
+        model_comparison_dict = (cross_validate_model_comparison(X, y, lambdas, hidden_unit_options, K=K))
+        pprint(model_comparison_dict)
+
+        # --
+        # RLR
+        rlr_result = model_comparison_dict["RLR"]
+        opt_lambdas_lst = list(zip(*rlr_result))[0]
+        opt_lambdas_lst = [lamb for lamb in opt_lambdas_lst]
+        # ANN
+        ann_result = model_comparison_dict["ANN"]
+        opt_hu_lst = list(zip(*ann_result))[0]
+        opt_hu_lst = [hu for hu in opt_hu_lst]
+
+        def most_frequent(input_lst):
+            # https://www.geeksforgeeks.org/python-find-most-frequent-element-in-a-list/
+            return max(set(input_lst), key=input_lst.count)
+
+        opt_lambda = most_frequent(opt_lambdas_lst)
+        opt_hu = most_frequent(opt_hu_lst)
+
+        print(f"{opt_hu = }\n"
+              f"{opt_lambda = }")
+    K = 2
+    opt_hu = 24
+    opt_lambda = 1
+    statistic_comparison(X, y, opt_hu, opt_lambda, K=K)
+    plot_models(X, y, 1, 20, K=2)
 
 
 if __name__ == '__main__':
-    """ Movie data part:"""
+    """ Movie data part :"""
     # write_filtered_and_movie_metadata_to_file()
     df_movies = pd.read_csv("collected_movie_data.csv", sep="\t", dtype=str)
     X, y, feats = regression_a(df_movies)
 
-    regression_b(X, y, feats)
+    # regression_b(X, y, feats)

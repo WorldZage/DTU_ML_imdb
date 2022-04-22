@@ -526,7 +526,7 @@ def sub_cross_validate_ann(X, y, hidden_unit_options, partition, K=10, max_iter=
                                          y=y_train_tensor,
                                          n_replicates=n_replicates,
                                          max_iter=max_iter)
-    ann_y_test_est = opt_net(X_test_tensor).data.numpy().reshape(y_test.shape) # .T
+    ann_y_test_est = opt_net(X_test_tensor).data.numpy().reshape(y_test.shape)  # .T
     return opt_hu, ann_y_test_est
 
 
@@ -538,8 +538,8 @@ def cross_validate_model_comparison(X, y, lambdas, hidden_unit_options, K=10):
     CV = model_selection.KFold(n_splits=K, shuffle=True)
 
     baseline_test_errors = np.empty((K, 1))
-    opt_lambda_lst, rlr_test_errors = np.empty((K, 1)), np.empty((K, 1))
-    opt_n_hu, ann_test_errors = np.empty((K, 1)), np.empty((K, 1))
+    opt_lambda_lst, rlr_test_errors = [0] * K, [0] * K
+    opt_n_hu, ann_test_errors = [0] * K, [0] * K
 
     """
     mu = np.empty((K, M_rlr - 1))
@@ -556,7 +556,7 @@ def cross_validate_model_comparison(X, y, lambdas, hidden_unit_options, K=10):
         rlr_se = np.square(y_test - rlr_y_test_est).sum(axis=0)
         rlr_test_errors[k] = rlr_se / y_test.shape[0]
 
-        opt_n_hu[k], ann_y_test_est = sub_cross_validate_ann(X, y, hidden_unit_options, partition, K=K)
+        opt_n_hu[k], ann_y_test_est = sub_cross_validate_ann(X, y, hidden_unit_options, partition, K=K, max_iter=5000)
         ann_se = np.square(ann_y_test_est - y_test).sum()  # squared error
 
         ann_test_errors[k] = ann_se / y_test.shape[0]  # Divide by number of observations
@@ -575,45 +575,104 @@ def plot_models(X, y, opt_hidden_units, opt_lambda, K=10):
 
     train_index, test_index = list(ss.split(X))[0]
     partition = (train_index, test_index)
-    rlr_err, yhatA = sub_cross_validate_rlr(X, y, lambdas=[opt_lambda], partition=partition, K=K)
-    ann_err, yhatB = sub_cross_validate_ann(X, y, hidden_unit_options=[opt_hidden_units], partition=partition, K=K, max_iter=10000)
+    rlr_err, yhatRLR = sub_cross_validate_rlr(X, y, lambdas=[opt_lambda], partition=partition, K=K)
+    ann_err, yhatANN = sub_cross_validate_ann(X, y, hidden_unit_options=[opt_hidden_units], partition=partition, K=K,
+                                              max_iter=10000)
+    y_train = y[train_index]
     y_test = y[test_index]
+    yhatBASE = y_train.mean(axis=0) * np.ones(np.shape(y_test))
 
-    plot(y_test,yhatA,'bo',alpha=0.35)
-    plot(y_test,yhatB,'ro',alpha=0.35)
+    plot(y_test, yhatRLR, 'bo', alpha=0.35)  # RLR
+    plot(y_test, yhatANN, 'ro', alpha=0.35)  # ANN
+    plot(y_test, yhatBASE, '+-', color="orange")  # BASE
+    plt.plot([0, 10], [0, 10], 'k--', )  # "PERFECT"
     xlabel("y_test (TRUE VALUES)")
     ylabel("y estimated (MODELS)")
-    legend(["y_test vs rlr estimate ","y_test vs ann estimate "],loc="best")
+    legend(["y_test vs {} estimate ".format(model_name) for model_name in ["rlr", "ann", "base", "perfect"]],
+           loc="best")
+    plt.xlim(0, 10)
+    plt.ylim(0, 10)
+    show()
+
+    # 2 subplots:
+    figure(1, figsize=(12, 8))
+    subplot(1, 2, 1)
+    plot(y_test, yhatRLR, 'bo')
+    plt.plot([0, 10], [0, 10], 'k--', )  # "PERFECT"
+    legend(["y_test vs RLR model", "Perfect line"])
+    xlabel('y_test')
+    ylabel('RLR esimate')
+    plt.xlim(0, 10)
+    plt.ylim(0, 10)
+    grid()
+
+    subplot(1, 2, 2)
+    # title('Optimal lambda: 1e{0}'.format(np.log10(opt_lambda)))
+    plot(y_test, yhatANN, 'ro')
+    plt.plot([0, 10], [0, 10], 'k--', )  # "PERFECT"
+    legend(["y_test vs ANN model", "Perfect line"])
+    xlabel('y_test')
+    ylabel('ANN esimate')
+    # legend(['Train error', 'Validation error'])
+    plt.xlim(0, 10)
+    plt.ylim(0, 10)
+    grid()
     show()
 
 
 def statistic_comparison(X, y, opt_hidden_units, opt_lambda, K=10):
-    test_proportion = 0.2
-
     ss = ShuffleSplit(n_splits=1, test_size=0.2, random_state=0)
 
     train_index, test_index = list(ss.split(X))[0]
     partition = (train_index, test_index)
-    _, yhatA = sub_cross_validate_rlr(X, y, lambdas=[opt_lambda], partition=partition, K=K)
-    _, yhatB = sub_cross_validate_ann(X, y, hidden_unit_options=[opt_hidden_units], partition=partition, K=K, max_iter=10000)
-
-    # X_test = X[test_index]
     y_test = y[test_index]
+    y_train = y[train_index]
+
+    _, yhatRLR = sub_cross_validate_rlr(X, y, lambdas=[opt_lambda], partition=partition, K=K)
+    _, yhatANN = sub_cross_validate_ann(X, y, hidden_unit_options=[opt_hidden_units], partition=partition, K=K,
+                                        max_iter=10000)
+    yhatBASE = y_train.mean(axis=0) * np.ones(np.shape(y_test))
 
     # perform statistical comparison of the models
     # compute z with squared error.
-    zA = np.abs(y_test - yhatA) ** 2
+    zRLR = np.abs(y_test - yhatRLR) ** 2
 
     # compute confidence interval of model A
     alpha = 0.05
-    CIA = st.t.interval(1 - alpha, df=len(zA) - 1, loc=np.mean(zA), scale=st.sem(zA))  # Confidence interval
+    # CIA = st.t.interval(1 - alpha, df=len(zA) - 1, loc=np.mean(zA), scale=st.sem(zA))  # Confidence interval
 
     # Compute confidence interval of z = zA-zB and p-value of Null hypothesis
-    zB = np.abs(y_test - yhatB) ** 2
-    z = zA - zB
-    CI = st.t.interval(1 - alpha, len(z) - 1, loc=np.mean(z), scale=st.sem(z))  # Confidence interval
-    p = 2 * st.t.cdf(-np.abs(np.mean(z)) / st.sem(z), df=len(z) - 1)  # p-value
+    zANN = np.abs(y_test - yhatANN) ** 2
+
+    zBASE = np.abs(y_test - yhatBASE) ** 2
+    #
+    z_dict = {
+        "RLRvANN": zRLR - zANN,
+        "RLRvBASE": zRLR - zBASE,
+        "ANNvBASE": zANN - zBASE
+    }
+
+    # Z:
+    Z_hat = {}
+    for key, value in z_dict.items():
+        Z_hat[key] = np.mean(value)
+
+    # Confidence interval
+    CIs = {}
+    for key, value in z_dict.items():
+        CIs[key] = st.t.interval(1 - alpha, len(value) - 1, loc=np.mean(value), scale=st.sem(value))
+    """
+        "RLRvANN" : ,
+        "RLRvBASE" : st.t.interval(1 - alpha, len(zRLR_v_BASE) - 1, loc=np.mean(zRLR_v_BASE), scale=st.sem(zRLR_v_BASE)),
+        "ANNvBASE" : st.t.interval(1 - alpha, len(zANN_v_BASE) - 1, loc=np.mean(zANN_v_BASE), scale=st.sem(zANN_v_BASE))
+    """
+
+    p_dict = {}
+    for key, value in z_dict.items():
+        p_dict[key] = 2 * st.t.cdf(-np.abs(np.mean(value)) / st.sem(value), df=len(value) - 1)  # p-value
     print(f"- - - - -\n"
-          f"{CI = }\n"
-          f"{p = }"
+          f"{z_dict = }\n"
+          f"{Z_hat = }\n"
+          f"{CIs = }\n"
+          f"{p_dict = }"
           f"- - - - -\n")
