@@ -6,8 +6,16 @@ from pprint import pprint
 
 import pandas as pd
 import numpy as np
-from matplotlib.pyplot import plot, show, title, figure, subplot, xlabel, ylabel, subplots_adjust, subplots, ylim
+
+import matplotlib.pyplot as plt
+from sklearn import tree
+from platform import system
+from os import getcwd
+
+from matplotlib.pyplot import plot, show, title, figure, subplot, xlabel, ylabel, subplots_adjust, subplots, ylim, hist, legend, imread
 from scipy.stats import stats
+
+from toolbox_02450 import windows_graphviz_call
 
 import summary_statistics as su
 import data_generator as dg
@@ -18,6 +26,7 @@ from constants import *
 from cross_validation import cross_validate_lambda, cross_validate_feature, cross_validate_ann, \
     optimal_hidden_unit_ann, cross_validate_model_comparison, statistic_comparison, plot_models
 
+from classification import compare_models, logistic_reg
 
 def write_filtered_and_movie_metadata_to_file():
     dataset_path_n_parents = "../../../"
@@ -224,6 +233,66 @@ def regression_b(X, y, feature_names):
     plot_models(X, y, 1, 20, K=2)
 
 
+def classification_models(data, col_idx_dict):
+    
+    N, M = data.shape
+    
+    # Extract the X and y data
+    y_col_idx = col_idx_dict[averageRating_name]
+    
+    # order descending considering average rating
+    
+    data_ordered = data[data[:, y_col_idx].argsort()[::-1]]
+    
+    # BALANCE DATA
+    rate_class_limit = 7.5
+    count_highrated = np.count_nonzero(data[:,y_col_idx] >= rate_class_limit)
+    print(count_highrated)
+
+    data_highrated =  data_ordered[:count_highrated, :]
+    data_lowrated = data_ordered[count_highrated:, :]
+    
+    print(data.shape)
+    print(data_highrated.shape)
+    print(data_lowrated.shape)
+    
+    # solve undersample of high rated
+    #data_highrated = np.tile(data_highrated,(2,1))
+    
+    np.random.shuffle(data_lowrated)
+    
+    limit_sample = len(data_highrated)
+    data_lowrated_sample = np.empty((limit_sample,M))
+    for i in range(limit_sample):
+        data_lowrated_sample[i,:] = data_lowrated[i, :]
+    
+    data_filt = np.concatenate((data_highrated, data_lowrated_sample), axis=0)
+
+    # remove y + uncorrelated attirbutes from data
+    X = np.delete(data_filt, [y_col_idx, 
+                         col_idx_dict[startYear_name], 
+                         col_idx_dict[cast_popularity_name], 
+                         col_idx_dict[budget_name],
+                         col_idx_dict["gross"]
+                         ], 1)
+
+    y = data_filt[:, y_col_idx]
+    y_binary = y.copy();
+    for i in range(len(y)):
+        if y[i] >= rate_class_limit:
+            y_binary[i]=0
+        else:
+            y_binary[i]=1
+    
+    # CLASSIFY
+    logistic_reg(X, y_binary, rate_class_limit)
+    
+    # COMPARY CLASSIFIERS
+    compare_models(X, y_binary)
+    
+
+    return X, y_binary, data_filt
+
 if __name__ == '__main__':
     """ Movie data part :"""
     # write_filtered_and_movie_metadata_to_file()
@@ -231,3 +300,19 @@ if __name__ == '__main__':
     X, y, feats = regression_a(df_movies)
 
     # regression_b(X, y, feats)
+    
+    # convert to array
+    data, col_idx_dict, col_idx_arr = dl2.data_loading(df_movies, "df_movies_and_extra")
+    data = np.array(data, dtype=float)
+    
+    #normalize
+    data_norm = data * (1/np.std(data,axis=0))
+    cov_mat = np.cov(data_norm.T).round(3)
+    #print(f"cov.mat: {cov_mat}")
+    
+    # investigate linear regression
+    #regression_a(data, col_idx_dict)
+    
+    # investigate logistic regression
+    X,y,data_filt = classification_models(data, col_idx_dict)
+
